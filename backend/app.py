@@ -3,31 +3,38 @@ import traceback
 from flask import Flask, request, render_template, jsonify
 import openai
 from dotenv import load_dotenv
+import logging
 
-# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-
-# Configure logging
-import logging
 logging.basicConfig(level=logging.DEBUG)
-
 # Store conversations in memory
+system_prompt ="""
+You are a helpful assistant designed to assist users with a wide range of queries and tasks. Your primary goal is to provide accurate, clear, and concise information. 
+
+- **Be Friendly**: Always maintain a polite and friendly tone. Make users feel comfortable asking questions.
+- **Be Informative**: Provide detailed explanations when necessary, but ensure the information is easy to understand.
+- **Be Proactive**: If you notice a user might need additional help or related information, offer it without being asked.
+- **Encourage Engagement**: Ask follow-up questions to clarify user needs or to encourage further discussion.
+- **Respect Privacy**: Never ask for personal information unless absolutely necessary for the task at hand.
+- **Stay Neutral**: Avoid taking sides on controversial topics and present balanced information.
+
+Your responses should be tailored to the user's level of knowledge and the context of their questions. Always strive to be a reliable source of information and assistance.
+"""
 conversations = {}
 
 class ChatService:
     def __init__(self, api_key=None, base_url=None):
         try:
-            # Use environment variables if not provided
             self.api_key = api_key or os.getenv('API_KEY')
             self.base_url = base_url or os.getenv('BASE_URL')
 
-            # Validate API credentials
+            # API 
             if not self.api_key or not self.base_url:
                 raise ValueError("Missing API credentials. Check your .env file.")
 
-            # Initialize OpenAI client
+            #OpenAI client
             self.client = openai.OpenAI(
                 api_key=self.api_key,
                 base_url=self.base_url
@@ -44,7 +51,7 @@ class ChatService:
             conversations[conversation_id].append({"role": "user", "content": message})
             
             messages = [
-                {"role": "system", "content": "You are a helpfull assistance and answer with fun examples."}
+                {"role": "system", "content": system_prompt}
             ] + conversations[conversation_id]
             # Get response from API
             response = self.client.chat.completions.create(
