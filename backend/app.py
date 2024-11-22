@@ -1,6 +1,7 @@
 import os
 import traceback
 from flask import Flask, request, render_template, jsonify
+from flask_cors import CORS
 import openai
 from dotenv import load_dotenv
 import logging
@@ -8,6 +9,7 @@ import logging
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 logging.basicConfig(level=logging.DEBUG)
 # Store conversations in memory
 system_prompt ="""
@@ -104,4 +106,4 @@ def clear_history(conversation_id):
     return jsonify({'status': 'success'})
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=8080)
