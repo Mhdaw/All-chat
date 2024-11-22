@@ -5,3 +5,4 @@ werkzeug==2.3.7
 os
 traceback
 dotenv
+flask_cors
