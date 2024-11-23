@@ -1,35 +1,36 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import { ChatInput, ChatMessages } from "./components/ui/chat";
+import { type Message } from "./components/ui/chat";
+import { Textarea } from "./components/ui/textarea";
+ 
+export const App = () =>{
 
-function App() {
-  const [count, setCount] = useState(0)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>)=>{
+
+  }
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>)=>{
+
+  }
+
+  const onFileLoadError = (errMsg: string) => {
+
+  };
+
+  const onFileLoad = async (file: File) => {
+  }
   return (
+  
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    
+      <div className=" bg-white h-screen flex flex-col justify-between">
+        <ChatMessages  messages={messages} isLoading={loading} />
+        <ChatInput input="" isLoading={loading} handleInputChange={handleInputChange} handleSubmit={handleSubmit} onFileError={onFileLoadError} onFileUpload={onFileLoad} />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      
     </>
-  )
-}
-
-export default App
+  );
+} 
