@@ -20,20 +20,20 @@ export const Overview = () => {
         </p>
         <p>
           Welcome to{' '}
-          <span className="font-medium text-blue-600">LinguaMate</span>, your
+          <span className="font-medium text-blue-600">AkashChat</span>, your
           personal AI-powered assistant for improving pronunciation and fluency
-          in any language. LinguaMate uses advanced speech recognition and AI
+          in any language. AkashChat uses advanced speech recognition and AI
           feedback to help you perfect your accent and improve your confidence
           in speaking.
         </p>
         <p>
           Whether you&apos;re learning a new language or polishing your skills,{' '}
-          <span className="font-medium">LinguaMate</span> provides tailored
+          <span className="font-medium">AkashChat</span> provides tailored
           exercises and real-time guidance. Learn with interactive activities,
           personalized feedback, and a seamless learning experience.
         </p>
         <p>
-          Explore more features and get started with LinguaMate today by
+          Explore more features and get started with AkashChat today by
           visiting our{' '}
           <Link
             className="font-medium underline underline-offset-4"
