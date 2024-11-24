@@ -6,3 +6,6 @@ testing the backend:
   -d '{"message": "Hello, can you help me with Python programming?", "conversation_id": "test_convo"}
 
 4. this will help you test the backend
+
+other way:
+you can just run the python app.py and then use the outputed link, a simple HTML page.
