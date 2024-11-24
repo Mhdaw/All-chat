@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Test</title>
+    <style>
+        body { max-width: 800px; margin: 0 auto; padding: 20px; }
+        #chat-history { margin: 20px 0; }
+        #message-input { width: 80%; padding: 5px; }
+        button { padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <h1>Chat Test Interface</h1>
+    <div id="chat-history"></div>
+    <input type="text" id="message-input" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="clearHistory()">Clear History</button>
+
+    <script>
+        function sendMessage() {
+            const message = document.getElementById('message-input').value;
+            if (!message) return;
+
+            fetch('/send_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    conversation_id: 'test'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateChatHistory();
+                document.getElementById('message-input').value = '';
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function updateChatHistory() {
+            fetch('/get_history/test')
+                .then(response => response.json())
+                .then(data => {
+                    const history = data.history;
+                    const chatHistory = document.getElementById('chat-history');
+                    chatHistory.innerHTML = history.map(msg => 
+                        `<p><strong>${msg.role}:</strong> ${msg.content}</p>`
+                    ).join('');
+                });
+        }
+
+        function clearHistory() {
+            fetch('/clear_history/test')
+                .then(() => updateChatHistory())
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Initial load
+        updateChatHistory();
+    </script>
+</body>
+</html>
