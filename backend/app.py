@@ -1,23 +1,34 @@
 import os
 import traceback
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, send_file
 from flask_cors import CORS
 import openai
 from dotenv import load_dotenv
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 import json
+import soundfile as sf
+import io
+
+from speech2text import transcribe_speech
+from text2speech import generate_speech
 
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
 logging.basicConfig(level=logging.DEBUG)
 
 # Store conversations in a file
 CONVERSATIONS_FILE = 'conversations.json'
 METADATA_FILE = 'chat_metadata.json'
+AUDIO_FOLDER = 'audio_files'
+
+# Create audio folder if it doesn't exist
+if not os.path.exists(AUDIO_FOLDER):
+    os.makedirs(AUDIO_FOLDER)
 
 def load_data():
     try:
@@ -98,10 +109,12 @@ class ChatService:
             assistant_message = response.choices[0].message.content
             conversations[conversation_id].append({"role": "assistant", "content": assistant_message})
             
-            # Save after each message
+            # Generate audio response
+            audio_filename = generate_speech(assistant_message, language="en", AUDIO_FOLDER=AUDIO_FOLDER)
+            
             save_data(conversations, chat_metadata)
             
-            return assistant_message
+            return assistant_message, audio_filename
         except Exception as e:
             logging.error(f"Error in get_response: {e}")
             raise
@@ -172,15 +185,64 @@ def send_message():
         if not message or not conversation_id:
             return jsonify({'error': 'Message and conversation_id are required'}), 400
             
-        response = chat_service.get_response(conversation_id, message)
+        text_response, audio_filename = chat_service.get_response(conversation_id, message)
         
         chat_metadata[conversation_id]['timestamp'] = datetime.utcnow().isoformat()
         save_data(conversations, chat_metadata)
-        
-        return jsonify({'response': response})
+        logging.info("Response generated successfully...")
+        return jsonify({
+            'response': text_response,
+            'audio_url': f'/audio/{audio_filename}' if audio_filename else None
+        })
     except Exception as e:
         logging.error(f"Message send error: {traceback.format_exc()}")
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/upload_audio', methods=['POST'])
+def upload_audio():
+    try:
+        if 'audio' not in request.files:
+            return jsonify({'error': 'No audio file provided'}), 400
+            
+        audio_file = request.files['audio']
+        conversation_id = request.form.get('conversation_id')
+        
+        if not conversation_id:
+            return jsonify({'error': 'conversation_id is required'}), 400
+            
+        temp_filename = os.path.join(AUDIO_FOLDER, f"temp_{uuid.uuid4()}.wav")
+        audio_file.save(temp_filename)
+        transcribed_text = transcribe_speech(temp_filename)
+        os.remove(temp_filename)
+        
+        if transcribed_text:
+            # Get response using transcribed text
+            text_response, audio_filename = chat_service.get_response(conversation_id, transcribed_text)
+            
+            return jsonify({
+                'transcribed_text': transcribed_text,
+                'response': text_response,
+                'audio_url': f'/audio/{audio_filename}' if audio_filename else None
+            })
+        else:
+            return jsonify({'error': 'Failed to transcribe audio'}), 500
+            
+    except Exception as e:
+        logging.error(f"Audio upload error: {traceback.format_exc()}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/audio/<filename>')
+def serve_audio(filename):
+    try:
+        return send_file(
+            os.path.join(AUDIO_FOLDER, filename),
+            mimetype='audio/mpeg'
+        )
+    except Exception as e:
+        logging.error(f"Error serving audio file: {e}")
+        return jsonify({'error': 'Audio file not found'}), 404
+
 
 @app.route('/get_history/<conversation_id>')
 def get_history(conversation_id):
