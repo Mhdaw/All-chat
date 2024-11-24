@@ -5,14 +5,51 @@ from flask_cors import CORS
 import openai
 from dotenv import load_dotenv
 import logging
+import uuid
+from datetime import datetime
+import json
 
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 logging.basicConfig(level=logging.DEBUG)
-# Store conversations in memory
-system_prompt ="""
+
+# Store conversations in a file
+CONVERSATIONS_FILE = 'conversations.json'
+METADATA_FILE = 'chat_metadata.json'
+
+def load_data():
+    try:
+        if os.path.exists(CONVERSATIONS_FILE):
+            with open(CONVERSATIONS_FILE, 'r') as f:
+                conversations = json.load(f)
+        else:
+            conversations = {}
+            
+        if os.path.exists(METADATA_FILE):
+            with open(METADATA_FILE, 'r') as f:
+                chat_metadata = json.load(f)
+        else:
+            chat_metadata = {}
+            
+        return conversations, chat_metadata
+    except Exception as e:
+        logging.error(f"Error loading data: {e}")
+        return {}, {}
+
+def save_data(conversations, chat_metadata):
+    try:
+        with open(CONVERSATIONS_FILE, 'w') as f:
+            json.dump(conversations, f)
+        with open(METADATA_FILE, 'w') as f:
+            json.dump(chat_metadata, f)
+    except Exception as e:
+        logging.error(f"Error saving data: {e}")
+
+conversations, chat_metadata = load_data()
+
+system_prompt = """
 You are a helpful assistant designed to assist users with a wide range of queries and tasks. Your primary goal is to provide accurate, clear, and concise information. 
 
 - **Be Friendly**: Always maintain a polite and friendly tone. Make users feel comfortable asking questions.
@@ -24,7 +61,6 @@ You are a helpful assistant designed to assist users with a wide range of querie
 
 Your responses should be tailored to the user's level of knowledge and the context of their questions. Always strive to be a reliable source of information and assistance.
 """
-conversations = {}
 
 class ChatService:
     def __init__(self, api_key=None, base_url=None):
@@ -32,11 +68,9 @@ class ChatService:
             self.api_key = api_key or os.getenv('API_KEY')
             self.base_url = base_url or os.getenv('BASE_URL')
 
-            # API 
             if not self.api_key or not self.base_url:
                 raise ValueError("Missing API credentials. Check your .env file.")
 
-            #OpenAI client
             self.client = openai.OpenAI(
                 api_key=self.api_key,
                 base_url=self.base_url
@@ -55,20 +89,23 @@ class ChatService:
             messages = [
                 {"role": "system", "content": system_prompt}
             ] + conversations[conversation_id]
-            # Get response from API
+            
             response = self.client.chat.completions.create(
                 model="Meta-Llama-3-1-8B-Instruct-FP8",
                 messages=messages
             )
-            # Add assistant response to history
+            
             assistant_message = response.choices[0].message.content
             conversations[conversation_id].append({"role": "assistant", "content": assistant_message})
+            
+            # Save after each message
+            save_data(conversations, chat_metadata)
+            
             return assistant_message
         except Exception as e:
             logging.error(f"Error in get_response: {e}")
             raise
 
-# Global chat service instance
 try:
     chat_service = ChatService()
 except Exception as e:
@@ -79,17 +116,67 @@ except Exception as e:
 def home():
     return render_template('index.html')
 
+@app.route('/create_chat', methods=['POST'])
+def create_chat():
+    chat_id = str(uuid.uuid4())
+    conversations[chat_id] = []
+    chat_metadata[chat_id] = {
+        'title': f'New Chat {len(chat_metadata) + 1}',
+        'timestamp': datetime.utcnow().isoformat()
+    }
+    save_data(conversations, chat_metadata)
+    return jsonify({
+        'chat_id': chat_id,
+        'title': chat_metadata[chat_id]['title'],
+        'timestamp': chat_metadata[chat_id]['timestamp']
+    })
+
+@app.route('/rename_chat', methods=['POST'])
+def rename_chat():
+    data = request.json
+    chat_id = data.get('chat_id')
+    new_title = data.get('title')
+    
+    if chat_id in chat_metadata:
+        chat_metadata[chat_id]['title'] = new_title
+        save_data(conversations, chat_metadata)
+        return jsonify({'status': 'success'})
+    return jsonify({'error': 'Chat not found'}), 404
+
+@app.route('/delete_chat/<chat_id>', methods=['DELETE'])
+def delete_chat(chat_id):
+    if chat_id in conversations:
+        del conversations[chat_id]
+        del chat_metadata[chat_id]
+        save_data(conversations, chat_metadata)
+        return jsonify({'status': 'success'})
+    return jsonify({'error': 'Chat not found'}), 404
+
+@app.route('/get_all_chats')
+def get_all_chats():
+    return jsonify({'chats': chat_metadata})
+
 @app.route('/send_message', methods=['POST'])
 def send_message():
     if not chat_service:
         return jsonify({'error': 'Chat service not initialized'}), 500
 
     try:
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+            
         data = request.json
         message = data.get('message')
-        conversation_id = data.get('conversation_id', 'default')
+        conversation_id = data.get('conversation_id')
         
+        if not message or not conversation_id:
+            return jsonify({'error': 'Message and conversation_id are required'}), 400
+            
         response = chat_service.get_response(conversation_id, message)
+        
+        chat_metadata[conversation_id]['timestamp'] = datetime.utcnow().isoformat()
+        save_data(conversations, chat_metadata)
+        
         return jsonify({'response': response})
     except Exception as e:
         logging.error(f"Message send error: {traceback.format_exc()}")
@@ -103,6 +190,7 @@ def get_history(conversation_id):
 def clear_history(conversation_id):
     if conversation_id in conversations:
         conversations[conversation_id] = []
+        save_data(conversations, chat_metadata)
     return jsonify({'status': 'success'})
 
 if __name__ == '__main__':
