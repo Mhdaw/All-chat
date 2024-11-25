@@ -28,7 +28,7 @@ export function Chat({
   selectedModelId: string;
 }) {
   const [streamedMessage, setStreamedMessage] = useState<Message | null>(null);
-  const [messages, setMessages] =useState<Message[]>([])
+  const [messages, setMessages] =useState<Message[]>(initialMessages)
   const [ input, setInput] = useState<string>("")
   const [isLoading, setLoading] = useState<boolean>(false)
   const handleSubmit = ()=> {
