@@ -1,8 +1,7 @@
 import type {
   Attachment,
   ChatRequestOptions,
-  CreateMessage,
-  Message,
+  CreateMessage
 } from 'ai';
 import cx from 'classnames';
 import { formatDistance } from 'date-fns';
@@ -49,6 +48,7 @@ export interface UIBlock {
     height: number;
   };
 }
+import { type Message } from '@/lib/types';
 
 export function Block({
   chatId,
@@ -79,9 +79,7 @@ export function Block({
   setMessages: Dispatch<SetStateAction<Array<Message>>>;
   votes: Array<Vote> | undefined;
   append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
+    message: Message) => Promise<string | null | undefined>;
   handleSubmit: (
     event?: {
       preventDefault?: () => void;
