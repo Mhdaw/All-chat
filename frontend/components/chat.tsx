@@ -2,6 +2,8 @@
 
 import type { Attachment, Message } from 'ai';
 import { useChat } from 'ai/react';
+import type { Attachment, Message } from 'ai';
+import { useChat } from 'ai/react';
 import { AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
@@ -29,34 +31,21 @@ export function Chat({
 }) {
   const { mutate } = useSWRConfig();
   const [streamedMessage, setStreamedMessage] = useState<Message | null>(null);
-  
-  const {
-    messages,
-    setMessages,
-    handleSubmit,
-    input,
-    setInput,
-    append,
-    isLoading,
-    stop,
-    data: streamingData,
-  } = useChat({
-    api: '', ///api/chat
-    id,
-    body: { 
-      id, 
-      modelId: selectedModelId 
-    },
-    initialMessages,
-    onError: (error) => {
-      console.error('Chat error:', error);
-    },
-    onFinish: (message) => {
-      mutate(''); ///api/history
-      setStreamedMessage(null);
-      setMessages((prevMessages) => [...prevMessages, message]);
-    }
-  });
+  const [messages, setMessages] =useState<Message[]>([])
+  const [ input, setInput] = useState<string>("")
+  const [isLoading, setLoading] = useState<boolean>(false)
+  const handleSubmit = ()=> {
+    
+  }
+
+  const append = async(message: Message):Promise<string | null | undefined> => {
+   return null
+}
+  const stop = ()=> {
+
+  }
+
+  const [ data,setData] = useState();
 
   const { width: windowWidth = 1920, height: windowHeight = 1080 } =
     useWindowSize();
