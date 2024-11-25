@@ -1,8 +1,7 @@
 import type {
   Attachment,
   ChatRequestOptions,
-  CreateMessage,
-  Message,
+  CreateMessage
 } from 'ai';
 import cx from 'classnames';
 import { formatDistance } from 'date-fns';
@@ -21,6 +20,7 @@ import {
   useDebounceCallback,
   useWindowSize,
 } from 'usehooks-ts';
+import { Message } from '@/lib/types';
 
 import type { Document, Suggestion, Vote } from '@/lib/db/schema';
 import { fetcher } from '@/lib/utils';
@@ -78,10 +78,7 @@ export function Block({
   messages: Array<Message>;
   setMessages: Dispatch<SetStateAction<Array<Message>>>;
   votes: Array<Vote> | undefined;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
+  append:(message: Message)=>Promise<string | null | undefined>;
   handleSubmit: (
     event?: {
       preventDefault?: () => void;

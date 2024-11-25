@@ -1,9 +1,5 @@
 'use client';
 
-import type { Attachment, Message } from 'ai';
-import { useChat } from 'ai/react';
-import type { Attachment, Message } from 'ai';
-import { useChat } from 'ai/react';
 import { AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
@@ -13,12 +9,13 @@ import { ChatHeader } from '@/components/chat-header';
 import { PreviewMessage, ThinkingMessage } from '@/components/message';
 import { useScrollToBottom } from '@/components/use-scroll-to-bottom';
 import type { Vote } from '@/lib/db/schema';
-import { fetcher } from '@/lib/utils';
-
+import { fetcher, generateUUID } from '@/lib/utils';
+import { Message } from '@/lib/types';
 import { Block, type UIBlock } from './block';
 import { BlockStreamHandler } from './block-stream-handler';
 import { MultimodalInput } from './multimodal-input';
 import { Overview } from './overview';
+import { Attachment } from 'ai';
 
 export function Chat({
   id,
@@ -35,6 +32,24 @@ export function Chat({
   const [ input, setInput] = useState<string>("")
   const [isLoading, setLoading] = useState<boolean>(false)
   const handleSubmit = ()=> {
+    setLoading(true)
+    const newMessage:Message = {
+      id:generateUUID(),
+      content:input,
+      role:"user",
+    }
+    setMessages((prev)=> [...prev, newMessage])
+    setInput("")
+
+    setTimeout(()=>{
+      const aiMessage:Message = {
+        id:generateUUID(),
+        content:"hello there how are you doing?",
+        role:"data",
+      }
+      setMessages((prev)=> [...prev, aiMessage])
+      setLoading(false)
+    }, 3000)
     
   }
 
@@ -64,7 +79,6 @@ export function Chat({
     },
   });
 
-  // /api/vote?chatId=${id}
   const { data: votes } = useSWR<Array<Vote>>(
     ``,
     fetcher,
@@ -74,12 +88,6 @@ export function Chat({
     useScrollToBottom<HTMLDivElement>();
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
-
-  useEffect(() => {
-    if (streamingData && typeof streamingData === 'object' && 'content' in streamingData) {
-      setStreamedMessage(streamingData as unknown as Message);
-    }
-  }, [streamingData]);
 
   const displayMessages = [...messages, ...(streamedMessage ? [streamedMessage] : [])];
 
@@ -117,7 +125,7 @@ export function Chat({
           onSubmit={(e) => {
             e.preventDefault();
             if (!input.trim()) return;
-            handleSubmit(e);
+            handleSubmit();
           }}
         >
           <MultimodalInput
@@ -135,29 +143,6 @@ export function Chat({
           />
         </form>
       </div>
-
-      <AnimatePresence>
-        {block?.isVisible && (
-          <Block
-            chatId={id}
-            input={input}
-            setInput={setInput}
-            handleSubmit={handleSubmit}
-            isLoading={isLoading}
-            stop={stop}
-            attachments={attachments}
-            setAttachments={setAttachments}
-            append={append}
-            block={block}
-            setBlock={setBlock}
-            messages={messages}
-            setMessages={setMessages}
-            votes={votes}
-          />
-        )}
-      </AnimatePresence>
-
-      <BlockStreamHandler streamingData={streamingData} setBlock={setBlock} />
     </>
   );
 }

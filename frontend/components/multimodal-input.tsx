@@ -4,7 +4,6 @@ import type {
   Attachment,
   ChatRequestOptions,
   CreateMessage,
-  Message,
 } from 'ai';
 import cx from 'classnames';
 import { motion } from 'framer-motion';
@@ -22,11 +21,13 @@ import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { sanitizeUIMessages } from '@/lib/utils';
+import { Message } from '@/lib/types';
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
+import { VoiceRecorder } from './voice-recorder';
 
 const suggestedActions = [
   {
@@ -65,10 +66,7 @@ export function MultimodalInput({
   setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
   messages: Array<Message>;
   setMessages: Dispatch<SetStateAction<Array<Message>>>;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
+  append: (message: Message)=>Promise<string | null | undefined>;
   handleSubmit: (
     event?: {
       preventDefault?: () => void;
@@ -123,7 +121,7 @@ export function MultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
-    window.history.replaceState({}, '', `/chat/${chatId}`);
+    // window.history.replaceState({}, '', `/chat/${chatId}`);
 
     handleSubmit(undefined, {
       experimental_attachments: attachments,
@@ -141,7 +139,6 @@ export function MultimodalInput({
     setAttachments,
     setLocalStorageInput,
     width,
-    chatId,
   ]);
 
   const uploadFile = async (file: File) => {
@@ -312,7 +309,7 @@ export function MultimodalInput({
       )}
 
       <Button
-        className="rounded-full p-1.5 h-fit absolute bottom-2 right-11 m-0.5 dark:border-zinc-700"
+        className="rounded-full p-1.5 h-fit absolute bottom-2 right-24 m-0.5 dark:border-zinc-700"
         onClick={(event) => {
           event.preventDefault();
           fileInputRef.current?.click();
@@ -322,6 +319,7 @@ export function MultimodalInput({
       >
         <PaperclipIcon size={14} />
       </Button>
+      <VoiceRecorder />
     </div>
   );
 }
