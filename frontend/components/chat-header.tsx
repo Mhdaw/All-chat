@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useWindowSize } from 'usehooks-ts';
+import { useLocalStorage, useReadLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { ModelSelector } from '@/components/model-selector';
 import { SidebarToggle } from '@/components/sidebar-toggle';
@@ -10,10 +10,27 @@ import { Button } from '@/components/ui/button';
 import { BetterTooltip } from '@/components/ui/tooltip';
 import { PlusIcon, VercelIcon } from './icons';
 import { useSidebar } from './ui/sidebar';
+import { useCallback } from 'react';
+import { MAIN_URL } from '@/lib/utils';
 
 export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const router = useRouter();
   const { open } = useSidebar();
+  const localStorage = useReadLocalStorage("chats") as []
+  const [newStorage, setLocalStorage] = useLocalStorage<any>("chats", localStorage)
+  const newChat = useCallback(()=>{
+    fetch(`${MAIN_URL}/create_chat`, {
+      method: 'POST',
+      headers: {
+                    'Content-Type': 'application/json'
+      }
+    })
+    .then((res)=> res.json())
+      .then((data)=> {
+        setLocalStorage([...newStorage, data])
+        router.push(`/${data.chat_id}`);
+      })
+}, [])
 
   const { width: windowWidth } = useWindowSize();
 
@@ -26,8 +43,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
             variant="outline"
             className="order-2 md:order-1 md:px-2 px-2 md:h-fit ml-auto md:ml-0"
             onClick={() => {
-              router.push('/');
-              router.refresh();
+              newChat()
             }}
           >
             <PlusIcon />

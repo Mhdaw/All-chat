@@ -319,7 +319,7 @@ export function MultimodalInput({
       >
         <PaperclipIcon size={14} />
       </Button>
-      <VoiceRecorder />
+      {/* <VoiceRecorder /> */}
     </div>
   );
 }

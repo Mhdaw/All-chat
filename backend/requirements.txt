@@ -7,6 +7,3 @@ gtts
 transformers
 torch
 soundfile
-io
-traceback
-json

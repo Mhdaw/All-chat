@@ -12,7 +12,7 @@ export function VoiceRecorder() {
         const mediaRecorder = new MediaRecorder(stream);
         
         setMedia(mediaRecorder)
-        mediaRecorder.start()
+        
 
         mediaRecorder.onstart =() =>{
             setRecording(true)
@@ -85,7 +85,7 @@ export function VoiceRecorder() {
   return !isRecording ? (
     <Button
       className="rounded-full p-1.5 h-fit absolute bottom-2 right-11 m-0.5 dark:border-zinc-700"
-      onClick={startRecording}
+      onClick={()=>startRecording()}
       variant="outline"
     //   disabled={isRecording}
     >

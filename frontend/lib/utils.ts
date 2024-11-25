@@ -2,9 +2,9 @@ import type {
   CoreAssistantMessage,
   CoreMessage,
   CoreToolMessage,
-  Message,
   ToolInvocation,
 } from 'ai';
+import { Message } from './types';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -14,13 +14,24 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export const MAIN_URL="https://cuddly-space-chainsaw-gp4wwgw47j7fpjj-8080.app.github.dev"
+
 interface ApplicationError extends Error {
   info: string;
   status: number;
 }
 
 export const fetcher = async (url: string) => {
-  const res = await fetch(url);
+  const res = await fetch(`${MAIN_URL}/send_message`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        message: "message",
+        conversation_id: "currentChatId"
+    })
+})
 
   if (!res.ok) {
     const error = new Error(
@@ -59,27 +70,6 @@ function addToolMessageToChat({
   messages: Array<Message>;
 }): Array<Message> {
   return messages.map((message) => {
-    if (message.toolInvocations) {
-      return {
-        ...message,
-        toolInvocations: message.toolInvocations.map((toolInvocation) => {
-          const toolResult = toolMessage.content.find(
-            (tool) => tool.toolCallId === toolInvocation.toolCallId,
-          );
-
-          if (toolResult) {
-            return {
-              ...toolInvocation,
-              state: 'result',
-              result: toolResult.result,
-            };
-          }
-
-          return toolInvocation;
-        }),
-      };
-    }
-
     return message;
   });
 }
@@ -119,7 +109,6 @@ export function convertToUIMessages(
       id: message.id,
       role: message.role as Message['role'],
       content: textContent,
-      toolInvocations,
     });
 
     return chatMessages;
@@ -167,34 +156,19 @@ export function sanitizeResponseMessages(
 
 export function sanitizeUIMessages(messages: Array<Message>): Array<Message> {
   const messagesBySanitizedToolInvocations = messages.map((message) => {
-    if (message.role !== 'assistant') return message;
+    if (message.role !== "data") return message;
 
-    if (!message.toolInvocations) return message;
 
-    const toolResultIds: Array<string> = [];
-
-    for (const toolInvocation of message.toolInvocations) {
-      if (toolInvocation.state === 'result') {
-        toolResultIds.push(toolInvocation.toolCallId);
-      }
-    }
-
-    const sanitizedToolInvocations = message.toolInvocations.filter(
-      (toolInvocation) =>
-        toolInvocation.state === 'result' ||
-        toolResultIds.includes(toolInvocation.toolCallId),
-    );
+    const toolResultIds: Array<string> = []
 
     return {
       ...message,
-      toolInvocations: sanitizedToolInvocations,
     };
   });
 
   return messagesBySanitizedToolInvocations.filter(
     (message) =>
-      message.content.length > 0 ||
-      (message.toolInvocations && message.toolInvocations.length > 0),
+      message.content!.length > 0 
   );
 }
 
@@ -211,14 +185,4 @@ export function getDocumentTimestampByIndex(
   if (index > documents.length) return new Date();
 
   return documents[index].createdAt;
-}
-
-export function getMessageIdFromAnnotations(message: Message) {
-  if (!message.annotations) return message.id;
-
-  const [annotation] = message.annotations;
-  if (!annotation) return message.id;
-
-  // @ts-expect-error messageIdFromServer is not defined in MessageAnnotation
-  return annotation.messageIdFromServer;
 }

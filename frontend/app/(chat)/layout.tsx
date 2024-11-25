@@ -16,7 +16,7 @@ export default async function Layout({
 
   return (
     <SidebarProvider defaultOpen={!isCollapsed}>
-      {/* <AppSidebar user={session?.user} /> */}
+      <AppSidebar />
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );

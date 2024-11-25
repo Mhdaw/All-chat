@@ -1,6 +1,5 @@
 'use client';
 
-import type { User } from 'next-auth';
 import { useRouter } from 'next/navigation';
 
 import { PlusIcon } from '@/components/icons';
@@ -19,10 +18,34 @@ import {
 } from '@/components/ui/sidebar';
 import { BetterTooltip } from '@/components/ui/tooltip';
 import Link from 'next/link';
+import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
+import { useCallback } from 'react';
+import { MAIN_URL } from '@/lib/utils';
 
-export function AppSidebar({ user }: { user: User | undefined }) {
+export function AppSidebar() {
   const router = useRouter();
+  const localStorage = useReadLocalStorage("chats") as []
+  const [newStorage, setLocalStorage] = useLocalStorage<any>("chats", [...localStorage])
   const { setOpenMobile } = useSidebar();
+
+
+  const newChat = useCallback(()=>{
+    fetch(`${MAIN_URL}/create_chat`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      }
+    })
+    .then((res)=> res.json())
+      .then((data)=> {
+        setLocalStorage([...newStorage, data])
+        router.push(`/${data.chat_id}`);
+        
+        
+      })
+}, [])
+  
+  
 
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
@@ -47,8 +70,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                 className="p-2 h-fit"
                 onClick={() => {
                   setOpenMobile(false);
-                  router.push('/');
-                  router.refresh();
+                  newChat()
                 }}
               >
                 <PlusIcon />
@@ -59,17 +81,17 @@ export function AppSidebar({ user }: { user: User | undefined }) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup className="-mx-2">
-          <SidebarHistory user={user} />
+          <SidebarHistory  />
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="gap-0 -mx-2">
-        {user && (
+        {/* {user && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarUserNav user={user} />
             </SidebarGroupContent>
           </SidebarGroup>
-        )}
+        )} */}
       </SidebarFooter>
     </Sidebar>
   );

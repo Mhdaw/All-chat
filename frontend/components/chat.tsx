@@ -16,6 +16,9 @@ import { BlockStreamHandler } from './block-stream-handler';
 import { MultimodalInput } from './multimodal-input';
 import { Overview } from './overview';
 import { Attachment } from 'ai';
+import { useParams } from 'next/navigation';
+import { MAIN_URL } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export function Chat({
   id,
@@ -26,7 +29,7 @@ export function Chat({
   initialMessages: Array<Message>;
   selectedModelId: string;
 }) {
-  const { mutate } = useSWRConfig();
+  const {id:chatId} = useParams()
   const [streamedMessage, setStreamedMessage] = useState<Message | null>(null);
   const [messages, setMessages] =useState<Message[]>([])
   const [ input, setInput] = useState<string>("")
@@ -41,15 +44,29 @@ export function Chat({
     setMessages((prev)=> [...prev, newMessage])
     setInput("")
 
-    setTimeout(()=>{
-      const aiMessage:Message = {
-        id:generateUUID(),
-        content:"hello there how are you doing?",
-        role:"data",
-      }
-      setMessages((prev)=> [...prev, aiMessage])
-      setLoading(false)
-    }, 3000)
+    fetch(`${MAIN_URL}/send_message`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+          message: input,
+          conversation_id: chatId
+      })
+  })
+  .then(response => response.json())
+  .then((data)=>{
+    const newMessage:Message= {
+      content:data.response,
+      audio_url: data.audio_url
+    }
+    setMessages((prev)=> [...prev, newMessage])
+    setLoading(false)
+    
+  })
+  .catch((e)=>{
+    toast.error("failed to get ai data");
+  })
     
   }
 
@@ -57,10 +74,8 @@ export function Chat({
    return null
 }
   const stop = ()=> {
-
+    setLoading(false)
   }
-
-  const [ data,setData] = useState();
 
   const { width: windowWidth = 1920, height: windowHeight = 1080 } =
     useWindowSize();
@@ -83,6 +98,15 @@ export function Chat({
     ``,
     fetcher,
   );
+
+  useEffect(()=>{
+    fetch(`${MAIN_URL}/get_history/${chatId}`)
+                .then(response => response.json())
+                .then((data)=>{
+                  setMessages((prev)=>[...prev, ...data.history])
+                  
+     })
+  }, [])
 
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();

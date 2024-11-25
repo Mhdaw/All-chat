@@ -4,7 +4,7 @@ import { type CoreUserMessage, generateText } from 'ai';
 import { cookies } from 'next/headers';
 
 import { customModel } from '@/lib/ai';
-
+import { MAIN_URL } from '@/lib/utils';
 export async function saveModelId(model: string) {
   const cookieStore = await cookies();
   cookieStore.set('model-id', model);
@@ -26,4 +26,15 @@ export async function generateTitleFromUserMessage({
   });
 
   return title;
+}
+
+
+export const createChat =async()=>{
+    const data = await fetch(`${MAIN_URL}/create_chat`, {
+      method: 'POST',
+      headers: {
+                    'Content-Type': 'application/json'
+      }
+    })
+    return await data.json();
 }
