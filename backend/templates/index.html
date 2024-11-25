@@ -1,25 +1,529 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Chat Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Chat Interface</title>
     <style>
-        body { max-width: 800px; margin: 0 auto; padding: 20px; }
-        #chat-history { margin: 20px 0; }
-        #message-input { width: 80%; padding: 5px; }
-        button { padding: 5px 10px; }
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f3f4f6;
+            --sidebar-color: #ffffff;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
+            --hover-color: #f8fafc;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            max-width: 1920px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .sidebar {
+            width: 300px;
+            background-color: var(--sidebar-color);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            box-shadow: 2px 0 5px var(--shadow-color);
+            z-index: 2;
+        }
+
+        .new-chat-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .new-chat-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        .chat-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        .chat-item {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            background-color: var(--sidebar-color);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .chat-item:hover {
+            background-color: var(--hover-color);
+            transform: translateX(2px);
+        }
+
+        .chat-item.active {
+            background-color: var(--hover-color);
+            border-color: var(--primary-color);
+        }
+
+        .chat-title {
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            word-break: break-word;
+        }
+
+        .chat-controls {
+            display: flex;
+            gap: 0.5rem;
+            position: absolute;
+            right: 0.5rem;
+            top: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .chat-item:hover .chat-controls {
+            opacity: 1;
+        }
+
+        .chat-control-btn {
+            padding: 0.25rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--text-color);
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .chat-control-btn:hover {
+            opacity: 1;
+        }
+
+        .timestamp {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .main-chat {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            position: relative;
+        }
+
+        .chat-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            background-color: white;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #current-chat-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        #chat-history {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .user-message {
+            background-color: var(--primary-color);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .assistant-message {
+            background-color: var(--background-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .message .timestamp {
+            position: absolute;
+            bottom: -1.25rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .user-message .timestamp {
+            right: 0;
+        }
+
+        .assistant-message .timestamp {
+            left: 0;
+        }
+
+        .input-area {
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+            background-color: white;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        #message-input {
+            flex-grow: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            resize: none;
+            min-height: 45px;
+            max-height: 200px;
+            transition: all 0.2s ease;
+        }
+
+        #message-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .send-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .send-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        .clear-btn {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .clear-btn:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .status-message {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            color: white;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 5px var(--shadow-color);
+        }
+
+        .success {
+            background-color: #10b981;
+        }
+
+        .error {
+            background-color: #ef4444;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 40vh;
+            }
+
+            .main-chat {
+                height: 60vh;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            .input-area {
+                padding: 0.75rem;
+            }
+
+            .action-btn {
+                padding: 0.75rem 1rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Chat Test Interface</h1>
-    <div id="chat-history"></div>
-    <input type="text" id="message-input" placeholder="Type your message...">
-    <button onclick="sendMessage()">Send</button>
-    <button onclick="clearHistory()">Clear History</button>
+    <div class="container">
+        <div class="sidebar">
+            <button class="new-chat-btn" onclick="createNewChat()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Chat
+            </button>
+            <div class="chat-list" id="chat-list">
+                <!-- Chat items will be added here -->
+            </div>
+        </div>
+        <div class="main-chat">
+            <div class="chat-header">
+                <h2 id="current-chat-title">Start a new chat</h2>
+            </div>
+            <div id="chat-history"></div>
+            <div class="input-area">
+                <textarea 
+                    id="message-input" 
+                    placeholder="Type your message..." 
+                    rows="1" 
+                    onkeydown="handleKeyPress(event)"
+                    oninput="autoResize(this)"
+                ></textarea>
+                <button class="action-btn send-btn" onclick="sendMessage()" id="send-button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    Send
+                </button>
+                <button class="action-btn clear-btn" onclick="clearHistory()" id="clear-button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Clear
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
+        let currentChatId = null;
+        let chats = {};
+
+        // Initialize the chat interface
+        window.onload = function() {
+            fetch('/get_all_chats')
+                .then(response => response.json())
+                .then(data => {
+                    chats = data.chats;
+                    if (Object.keys(chats).length === 0) {
+                        createNewChat();
+                    } else {
+                        updateChatList();
+                        const mostRecentChat = Object.entries(chats)
+                            .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp))[0];
+                        switchToChat(mostRecentChat[0]);
+                    }
+                });
+        };
+
+        // Show status messages
+        function showStatus(message, type) {
+            const existingStatus = document.querySelector('.status-message');
+            if (existingStatus) {
+                existingStatus.remove();
+            }
+
+            const statusElement = document.createElement('div');
+            statusElement.className = `status-message ${type}`;
+            statusElement.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    ${type === 'success' 
+                        ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
+                        : '<circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>'}
+                </svg>
+                ${message}
+            `;
+            document.body.appendChild(statusElement);
+
+            setTimeout(() => {
+                statusElement.remove();
+            }, 3000);
+        }
+
+        // Create a new chat
+        function createNewChat() {
+            fetch('/create_chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                chats[data.chat_id] = {
+                    title: data.title,
+                    timestamp: data.timestamp
+                };
+                switchToChat(data.chat_id);
+                updateChatList();
+                document.getElementById('message-input').focus();
+            })
+            .catch(error => {
+                showStatus('Failed to create new chat', 'error');
+            });
+        }
+
+        // Update the chat list in the sidebar
+        function updateChatList() {
+            const chatList = document.getElementById('chat-list');
+            chatList.innerHTML = '';
+            
+            Object.entries(chats)
+                .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp))
+                .forEach(([chatId, chatInfo]) => {
+                    const chatItem = document.createElement('div');
+                    chatItem.className = `chat-item ${chatId === currentChatId ? 'active' : ''}`;
+                    chatItem.innerHTML = `
+                        <div class="chat-title">${chatInfo.title}</div>
+                        <div class="timestamp">${new Date(chatInfo.timestamp).toLocaleString()}</div>
+                        <div class="chat-controls">
+                            <button class="chat-control-btn" onclick="renameChat('${chatId}')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                </svg>
+                            </button>
+                            <button class="chat-control-btn" onclick="deleteChat('${chatId}')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                    chatItem.onclick = (e) => {
+                        if (!e.target.closest('.chat-control-btn')) {
+                            switchToChat(chatId);
+                        }
+                    };
+                    chatList.appendChild(chatItem);
+                });
+        }
+
+        // Switch to a different chat
+        function switchToChat(chatId) {
+            currentChatId = chatId;
+            document.getElementById('current-chat-title').textContent = chats[chatId].title;
+            updateChatList();
+            loadChatHistory(chatId);
+        }
+
+        // Load chat history
+        function loadChatHistory(chatId) {
+            fetch(`/get_history/${chatId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const chatHistory = document.getElementById('chat-history');
+                    chatHistory.innerHTML = '';
+                    data.history.forEach(message => {
+                        const messageElement = document.createElement('div');
+                        messageElement.className = `message ${message.role}-message`;
+                        messageElement.textContent = message.content;
+                        messageElement.innerHTML += `<div class="timestamp">${new Date().toLocaleTimeString()}</div>`;
+                        chatHistory.appendChild(messageElement);
+                    });
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                });
+        }
+
+        // Send a message
         function sendMessage() {
-            const message = document.getElementById('message-input').value;
-            if (!message) return;
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+            
+            if (!message || !currentChatId) return;
+            
+            messageInput.value = '';
+            autoResize(messageInput);
+            
+            const chatHistory = document.getElementById('chat-history');
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user-message';
+            userMessage.textContent = message;
+            userMessage.innerHTML += `<div class="timestamp">${new Date().toLocaleTimeString()}</div>`;
+            chatHistory.appendChild(userMessage);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
 
             fetch('/send_message', {
                 method: 'POST',
@@ -28,37 +532,111 @@
                 },
                 body: JSON.stringify({
                     message: message,
-                    conversation_id: 'test'
+                    conversation_id: currentChatId
                 })
             })
             .then(response => response.json())
             .then(data => {
-                updateChatHistory();
-                document.getElementById('message-input').value = '';
+                const assistantMessage = document.createElement('div');
+                assistantMessage.className = 'message assistant-message';
+                assistantMessage.textContent = data.response;
+                assistantMessage.innerHTML += `<div class="timestamp">${new Date().toLocaleTimeString()}</div>`;
+                chatHistory.appendChild(assistantMessage);
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+                chats[currentChatId].timestamp = new Date().toISOString();
+                updateChatList();
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                showStatus('Failed to send message', 'error');
+            });
         }
 
-        function updateChatHistory() {
-            fetch('/get_history/test')
+        // Handle enter key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Auto-resize textarea
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+        }
+
+        // Rename chat
+        function renameChat(chatId) {
+            const newTitle = prompt('Enter new chat title:', chats[chatId].title);
+            if (newTitle && newTitle.trim()) {
+                fetch('/rename_chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        title: newTitle.trim()
+                    })
+                })
                 .then(response => response.json())
                 .then(data => {
-                    const history = data.history;
-                    const chatHistory = document.getElementById('chat-history');
-                    chatHistory.innerHTML = history.map(msg => 
-                        `<p><strong>${msg.role}:</strong> ${msg.content}</p>`
-                    ).join('');
+                    chats[chatId].title = newTitle.trim();
+                    updateChatList();
+                    if (currentChatId === chatId) {
+                        document.getElementById('current-chat-title').textContent = newTitle.trim();
+                    }
+                    showStatus('Chat renamed successfully', 'success');
+                })
+                .catch(error => {
+                    showStatus('Failed to rename chat', 'error');
                 });
+            }
         }
 
+        // Delete chat
+        function deleteChat(chatId) {
+            if (confirm('Are you sure you want to delete this chat?')) {
+                fetch(`/delete_chat/${chatId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    delete chats[chatId];
+                    if (currentChatId === chatId) {
+                        const remainingChats = Object.keys(chats);
+                        if (remainingChats.length > 0) {
+                            switchToChat(remainingChats[0]);
+                        } else {
+                            createNewChat();
+                        }
+                    } else {
+                        updateChatList();
+                    }
+                    showStatus('Chat deleted successfully', 'success');
+                })
+                .catch(error => {
+                    showStatus('Failed to delete chat', 'error');
+                });
+            }
+        }
+
+        // Clear chat history
         function clearHistory() {
-            fetch('/clear_history/test')
-                .then(() => updateChatHistory())
-                .catch(error => console.error('Error:', error));
+            if (!currentChatId) return;
+            
+            if (confirm('Are you sure you want to clear this chat history?')) {
+                fetch(`/clear_history/${currentChatId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('chat-history').innerHTML = '';
+                        showStatus('Chat history cleared', 'success');
+                    })
+                    .catch(error => {
+                        showStatus('Failed to clear chat history', 'error');
+                    });
+            }
         }
-
-        // Initial load
-        updateChatHistory();
     </script>
 </body>
 </html>
