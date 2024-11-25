@@ -4,6 +4,7 @@ import type {
   Attachment,
   ChatRequestOptions,
   CreateMessage,
+  Message,
 } from 'ai';
 import cx from 'classnames';
 import { motion } from 'framer-motion';
@@ -19,8 +20,8 @@ import {
 } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
-import { Message } from '@/lib/types';
-import { fetcher, sanitizeUIMessages } from '@/lib/utils';
+
+import { sanitizeUIMessages } from '@/lib/utils';
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
@@ -65,7 +66,9 @@ export function MultimodalInput({
   messages: Array<Message>;
   setMessages: Dispatch<SetStateAction<Array<Message>>>;
   append: (
-    message: Message) => Promise<string | null | undefined>;
+    message: Message | CreateMessage,
+    chatRequestOptions?: ChatRequestOptions,
+  ) => Promise<string | null | undefined>;
   handleSubmit: (
     event?: {
       preventDefault?: () => void;
@@ -120,12 +123,11 @@ export function MultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
-    // window.history.replaceState({}, '', `/chat/${chatId}`);
+    window.history.replaceState({}, '', `/chat/${chatId}`);
 
-    // handleSubmit(undefined, {
-    //   experimental_attachments: attachments,
-    // });
-    console.log("handling submit");
+    handleSubmit(undefined, {
+      experimental_attachments: attachments,
+    });
 
     setAttachments([]);
     setLocalStorageInput('');
@@ -218,7 +220,6 @@ export function MultimodalInput({
                     append({
                       role: 'user',
                       content: suggestedAction.action,
-                     
                     });
                   }}
                   className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"

@@ -1,5 +1,6 @@
 'use client';
 
+import type { Message } from 'ai';
 import cx from 'classnames';
 import { motion } from 'framer-motion';
 import type { Dispatch, SetStateAction } from 'react';
@@ -13,7 +14,6 @@ import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
 import { PreviewAttachment } from './preview-attachment';
 import { Weather } from './weather';
-import { Message } from '@/lib/types';
 
 export const PreviewMessage = ({
   chatId,

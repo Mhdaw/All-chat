@@ -1,8 +1,9 @@
 'use client';
 
-import type { Attachment, JSONValue } from 'ai';
+import type { Attachment, Message } from 'ai';
+import { useChat } from 'ai/react';
 import { AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useRef, FormEvent } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import { useWindowSize } from 'usehooks-ts';
 
@@ -16,7 +17,6 @@ import { Block, type UIBlock } from './block';
 import { BlockStreamHandler } from './block-stream-handler';
 import { MultimodalInput } from './multimodal-input';
 import { Overview } from './overview';
-import { Message } from '@/lib/types';
 
 export function Chat({
   id,
@@ -27,22 +27,36 @@ export function Chat({
   initialMessages: Array<Message>;
   selectedModelId: string;
 }) {
+  const { mutate } = useSWRConfig();
   const [streamedMessage, setStreamedMessage] = useState<Message | null>(null);
-  const [messages, setMessages] =useState<Message[]>(initialMessages)
-  const [ input, setInput] = useState<string>("")
-  const [isLoading, setLoading] = useState<boolean>(false)
-  const handleSubmit = ()=> {
-    
-  }
-
-  const append = async(message: Message):Promise<string | null | undefined> => {
-   return null
-}
-  const stop = ()=> {
-
-  }
-
-  const [ data,setData] = useState();
+  
+  const {
+    messages,
+    setMessages,
+    handleSubmit,
+    input,
+    setInput,
+    append,
+    isLoading,
+    stop,
+    data: streamingData,
+  } = useChat({
+    api: '', ///api/chat
+    id,
+    body: { 
+      id, 
+      modelId: selectedModelId 
+    },
+    initialMessages,
+    onError: (error) => {
+      console.error('Chat error:', error);
+    },
+    onFinish: (message) => {
+      mutate(''); ///api/history
+      setStreamedMessage(null);
+      setMessages((prevMessages) => [...prevMessages, message]);
+    }
+  });
 
   const { width: windowWidth = 1920, height: windowHeight = 1080 } =
     useWindowSize();
@@ -63,7 +77,7 @@ export function Chat({
 
   // /api/vote?chatId=${id}
   const { data: votes } = useSWR<Array<Vote>>(
-    `http://127.0.0.1:8080/send_message`,
+    ``,
     fetcher,
   );
 
@@ -71,7 +85,7 @@ export function Chat({
     useScrollToBottom<HTMLDivElement>();
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
-  const [streamingData, setStreamingData] = useState<JSONValue[] | undefined>()
+
   useEffect(() => {
     if (streamingData && typeof streamingData === 'object' && 'content' in streamingData) {
       setStreamedMessage(streamingData as unknown as Message);
@@ -114,7 +128,7 @@ export function Chat({
           onSubmit={(e) => {
             e.preventDefault();
             if (!input.trim()) return;
-            handleSubmit();
+            handleSubmit(e);
           }}
         >
           <MultimodalInput
