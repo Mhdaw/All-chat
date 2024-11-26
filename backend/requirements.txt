@@ -6,4 +6,4 @@ flask_cors
 gtts
 transformers
 torch
-soundfile
+librosa
