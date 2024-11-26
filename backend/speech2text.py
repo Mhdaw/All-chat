@@ -1,7 +1,7 @@
 import torch
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 import logging
-import soundfile as sf
+import librosa
 
 model_names = ["openai/whisper-tiny", "openai/whisper-tiny.en", "openai/whisper-base", 
                "openai/whisper-base.en", "openai/whisper-small", "openai/whisper-small.en"]
@@ -14,10 +14,11 @@ model.config.forced_decoder_ids = None
 def transcribe_speech(audio_file):
     """Transcribe speech from audio file"""
     try:
-        audio_data, sample_rate = sf.read(audio_file)
+        audio, sr = librosa.load(audio_file, sr=48000)
+        audio_resampled = librosa.resample(audio, orig_sr=sr, target_sr=16000)
         input_features = processor(
-            audio_data, 
-            sampling_rate=sample_rate, 
+            audio_resampled, 
+            sampling_rate=16000, 
             return_tensors="pt"
         ).input_features
         
