@@ -58,7 +58,8 @@ export function Chat({
   .then((data)=>{
     const newMessage:Message= {
       content:data.response,
-      audio_url: data.audio_url
+      audio_url: data.audio_url,
+      role:"assistant"
     }
     setMessages((prev)=> [...prev, newMessage])
     setLoading(false)
@@ -120,6 +121,7 @@ export function Chat({
       <div className="flex flex-col min-w-0 h-dvh bg-background">
         <ChatHeader selectedModelId={selectedModelId} />
         <div
+        key={"hel"}
           ref={messagesContainerRef}
           className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
         >

@@ -14,7 +14,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const MAIN_URL="https://cuddly-space-chainsaw-gp4wwgw47j7fpjj-8080.app.github.dev"
+export const MAIN_URL="https://effective-acorn-p6jqqxqjp46frwr6-8080.app.github.dev"
 
 interface ApplicationError extends Error {
   info: string;

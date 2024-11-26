@@ -2,7 +2,7 @@ export interface Message {
     id?:string;
     content?:string;
     createdAt?:Date;
-    role?:"user" | "data" | "system";
+    role?:"user" | "data" | "system"|"assistant";
     audio_url?: string;
   }
 

@@ -24,7 +24,8 @@ import { MAIN_URL } from '@/lib/utils';
 
 export function AppSidebar() {
   const router = useRouter();
-  const localStorage = useReadLocalStorage("chats") as []
+  const localStorage = useReadLocalStorage("chats") || []
+
   const [newStorage, setLocalStorage] = useLocalStorage<any>("chats", [...localStorage])
   const { setOpenMobile } = useSidebar();
 
