@@ -8,7 +8,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 import json
-import soundfile as sf
+import librosa
 import io
 
 from speech2text import transcribe_speech
@@ -95,11 +95,19 @@ class ChatService:
             if conversation_id not in conversations:
                 conversations[conversation_id] = []
                 
-            conversations[conversation_id].append({"role": "user", "content": message})
+            # Add user message with no audio
+            conversations[conversation_id].append({
+                "role": "user", 
+                "content": message,
+                "audio_file": None
+            })
             
             messages = [
                 {"role": "system", "content": system_prompt}
-            ] + conversations[conversation_id]
+            ] + [{
+                "role": msg["role"], 
+                "content": msg["content"]
+            } for msg in conversations[conversation_id]]
             
             response = self.client.chat.completions.create(
                 model="Meta-Llama-3-1-8B-Instruct-FP8",
@@ -107,10 +115,13 @@ class ChatService:
             )
             
             assistant_message = response.choices[0].message.content
-            conversations[conversation_id].append({"role": "assistant", "content": assistant_message})
-            
-            # Generate audio response
             audio_filename = generate_speech(assistant_message, language="en", AUDIO_FOLDER=AUDIO_FOLDER)
+            
+            conversations[conversation_id].append({
+                "role": "assistant",
+                "content": assistant_message,
+                "audio_file": audio_filename
+            })
             
             save_data(conversations, chat_metadata)
             
@@ -159,6 +170,15 @@ def rename_chat():
 @app.route('/delete_chat/<chat_id>', methods=['DELETE'])
 def delete_chat(chat_id):
     if chat_id in conversations:
+        # Delete associated audio files
+        for message in conversations[chat_id]:
+            if message.get('audio_file'):
+                audio_path = os.path.join(AUDIO_FOLDER, message['audio_file'])
+                try:
+                    os.remove(audio_path)
+                except OSError:
+                    pass
+        
         del conversations[chat_id]
         del chat_metadata[chat_id]
         save_data(conversations, chat_metadata)
@@ -211,27 +231,43 @@ def upload_audio():
         if not conversation_id:
             return jsonify({'error': 'conversation_id is required'}), 400
             
-        temp_filename = os.path.join(AUDIO_FOLDER, f"temp_{uuid.uuid4()}.wav")
-        audio_file.save(temp_filename)
-        transcribed_text = transcribe_speech(temp_filename)
-        os.remove(temp_filename)
+        # Save user's audio file
+        user_audio_filename = f"user_{uuid.uuid4()}.wav"
+        user_audio_path = os.path.join(AUDIO_FOLDER, user_audio_filename)
+        audio_file.save(user_audio_path)
+        
+        transcribed_text = transcribe_speech(user_audio_path)
         
         if transcribed_text:
+            # Add user message with audio
+            if conversation_id not in conversations:
+                conversations[conversation_id] = []
+                
+            conversations[conversation_id].append({
+                "role": "user",
+                "content": transcribed_text,
+                "audio_file": user_audio_filename
+            })
+            
             # Get response using transcribed text
             text_response, audio_filename = chat_service.get_response(conversation_id, transcribed_text)
+            
+            save_data(conversations, chat_metadata)
             
             return jsonify({
                 'transcribed_text': transcribed_text,
                 'response': text_response,
-                'audio_url': f'/audio/{audio_filename}' if audio_filename else None
+                'audio_url': f'/audio/{audio_filename}' if audio_filename else None,
+                'user_audio_url': f'/audio/{user_audio_filename}'
             })
         else:
+            os.remove(user_audio_path)
             return jsonify({'error': 'Failed to transcribe audio'}), 500
             
     except Exception as e:
         logging.error(f"Audio upload error: {traceback.format_exc()}")
         return jsonify({'error': str(e)}), 500
-
+    
 @app.route('/audio/<filename>')
 def serve_audio(filename):
     try:
