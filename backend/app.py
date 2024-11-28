@@ -90,7 +90,7 @@ class ChatService:
             logging.error(f"Chat Service initialization error: {e}")
             raise
 
-    def get_response(self, conversation_id, message, model=None):
+    def get_response(self, conversation_id, message):#, model=None
         try:
             if conversation_id not in conversations:
                 conversations[conversation_id] = []
@@ -110,7 +110,7 @@ class ChatService:
             } for msg in conversations[conversation_id]]
             
             response = self.client.chat.completions.create(
-                model= model or "Meta-Llama-3-1-8B-Instruct-FP8",
+                model= "Meta-Llama-3-1-8B-Instruct-FP8",  #model or "Meta-Llama-3-1-8B-Instruct-FP8"
                 messages=messages
             )
             
@@ -201,12 +201,12 @@ def send_message():
         data = request.json
         message = data.get('message')
         conversation_id = data.get('conversation_id')
-        model = data.get('model')  # Get the selected model
+        #model = data.get('model')  # Get the selected model
         
         if not message or not conversation_id:
             return jsonify({'error': 'Message and conversation_id are required'}), 400
             
-        text_response, audio_filename = chat_service.get_response(conversation_id, message, model)
+        text_response, audio_filename = chat_service.get_response(conversation_id, message)# , model
         
         chat_metadata[conversation_id]['timestamp'] = datetime.utcnow().isoformat()
         save_data(conversations, chat_metadata)
