@@ -19,6 +19,8 @@ export function NavigateToChat({chat}:any){
     },[])
 
     return <>
-        Moving to chat......
+        <div className=" grid place-items-center h-screen w-screen">
+            <p>Moving to chat......</p>
+        </div>
     </>
 }

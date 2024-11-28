@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 
 import { PlusIcon } from '@/components/icons';
 import { SidebarHistory } from '@/components/sidebar-history';
-import { SidebarUserNav } from '@/components/sidebar-user-nav';
 import { Button } from '@/components/ui/button';
 import {
   Sidebar,
@@ -19,15 +18,17 @@ import {
 import { BetterTooltip } from '@/components/ui/tooltip';
 import Link from 'next/link';
 import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
-import { useCallback } from 'react';
+import { useCallback} from 'react';
 import { MAIN_URL } from '@/lib/utils';
 
 export function AppSidebar() {
   const router = useRouter();
-  const localStorage = useReadLocalStorage("chats") || []
-
-  const [newStorage, setLocalStorage] = useLocalStorage<any>("chats", [...localStorage])
+  const localStorage = useReadLocalStorage("chats") as [];
   const { setOpenMobile } = useSidebar();
+  const [local, setLocal] = useLocalStorage("chats", [...localStorage]);
+
+  
+  
 
 
   const newChat = useCallback(()=>{
@@ -39,10 +40,8 @@ export function AppSidebar() {
     })
     .then((res)=> res.json())
       .then((data)=> {
-        setLocalStorage([...newStorage, data])
+        setLocal((prev)=> [...prev, data] as any)
         router.push(`/${data.chat_id}`);
-        
-        
       })
 }, [])
   

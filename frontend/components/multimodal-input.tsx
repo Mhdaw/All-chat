@@ -1,10 +1,6 @@
 'use client';
 
-import type {
-  Attachment,
-  ChatRequestOptions,
-  CreateMessage,
-} from 'ai';
+import {Attachment} from "@/lib/types"
 import cx from 'classnames';
 import { motion } from 'framer-motion';
 import type React from 'react';
@@ -70,8 +66,7 @@ export function MultimodalInput({
   handleSubmit: (
     event?: {
       preventDefault?: () => void;
-    },
-    chatRequestOptions?: ChatRequestOptions,
+    }
   ) => void;
   className?: string;
 }) {
@@ -113,6 +108,7 @@ export function MultimodalInput({
   }, [input, setLocalStorageInput]);
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    event.preventDefault();
     setInput(event.target.value);
     adjustHeight();
   };
@@ -123,9 +119,7 @@ export function MultimodalInput({
   const submitForm = useCallback(() => {
     // window.history.replaceState({}, '', `/chat/${chatId}`);
 
-    handleSubmit(undefined, {
-      experimental_attachments: attachments,
-    });
+    handleSubmit();
 
     setAttachments([]);
     setLocalStorageInput('');

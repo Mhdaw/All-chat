@@ -33,18 +33,27 @@ export function MessageActions({
   if (message.role === 'user') return null;
   const [audio, setAudio] = useState(document.createElement("audio"));
   useEffect(()=>{
-    audio.src = `${MAIN_URL}${message.audio_url!}`
-    console.log(message);
+    audio.src = `${MAIN_URL}${message.audio_url|| `/audio/${message.audio_file}`}`
+    setAudioState("paused")
+    audio.onpause =()=>{
+      setAudioState("paused")
+    }
     
   },[])
 
   const play =()=>{
-    console.log(message);
-    console.log(audio.currentSrc);
+    console.log("playing");
     
     audio.play()
+    setAudioState("playing")
   }
 
+  const stop =()=>{
+    console.log("stopping");
+    
+    audio?.pause()
+    setAudioState("paused")
+  }
    
 
 
@@ -102,12 +111,16 @@ export function MessageActions({
               className="py-1 px-2 h-fit text-muted-foreground !pointer-events-auto"
               variant="outline"
               onClick={()=>{
-               play();
+                if(audioState == "playing"){
+                  stop();
+                }else{
+                  play()
+                }
+
               }}
               disabled={false}
             >
-              <Play />
-              {/* {audioState == "canplay" || audioState == "paused" ? <Play />:<Pause />} */}
+              {audioState == "paused" ? <Play /> : <Pause />}
             </Button>
           </TooltipTrigger>
           <TooltipContent>Play Or Pause</TooltipContent>

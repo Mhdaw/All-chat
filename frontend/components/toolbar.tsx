@@ -1,6 +1,6 @@
 'use client';
 
-import type { ChatRequestOptions, CreateMessage, Message } from 'ai';
+import type { ChatRequestOptions, CreateMessage,Message } from 'ai';
 import cx from 'classnames';
 import {
   AnimatePresence,
@@ -330,7 +330,7 @@ export const Toolbar = ({
   append,
   isLoading,
   stop,
-  setMessages,
+
 }: {
   isToolbarVisible: boolean;
   setIsToolbarVisible: Dispatch<SetStateAction<boolean>>;
@@ -340,7 +340,6 @@ export const Toolbar = ({
     chatRequestOptions?: ChatRequestOptions,
   ) => Promise<string | null | undefined>;
   stop: () => void;
-  setMessages: Dispatch<SetStateAction<Message[]>>;
 }) => {
   const toolbarRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
@@ -438,7 +437,7 @@ export const Toolbar = ({
             className="p-3"
             onClick={() => {
               stop();
-              setMessages((messages) => sanitizeUIMessages(messages));
+              
             }}
           >
             <StopIcon />
