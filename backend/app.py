@@ -9,6 +9,7 @@ import uuid
 from datetime import datetime, timezone
 import json
 import librosa
+from pydub import AudioSegment
 import io
 
 from speech2text import transcribe_speech
@@ -225,19 +226,28 @@ def upload_audio():
     try:
         if 'audio' not in request.files:
             return jsonify({'error': 'No audio file provided'}), 400
+
+        
             
         audio_file = request.files['audio']
+        if audio_file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
         conversation_id = request.form.get('conversation_id')
         
         if not conversation_id:
             return jsonify({'error': 'conversation_id is required'}), 400
             
         # Save user's audio file
-        user_audio_filename = f"user_{uuid.uuid4()}.wav"
-        user_audio_path = os.path.join(AUDIO_FOLDER, user_audio_filename)
-        audio_file.save(user_audio_path)
+        #user_audio_filename = f"user_{uuid.uuid4()}.webm"
+        temp_path = os.path.join(AUDIO_FOLDER, f"user_{uuid.uuid4()}.webm")
+        audio_file.save(temp_path)
+
+        wav_path = os.path.join(AUDIO_FOLDER, f"{uuid.uuid4()}.wav")
+        audio = AudioSegment.from_file(temp_path, format="webm")
+        audio.export(wav_path, format="wav")
+        os.remove(temp_path)
         
-        transcribed_text = transcribe_speech(user_audio_path)
+        transcribed_text = transcribe_speech(audio)
         
         if transcribed_text:
             # Add user message with audio
