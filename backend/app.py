@@ -431,7 +431,7 @@ def send_message():
         message = data.get('message')
         conversation_id = data.get('conversation_id')
         model = data.get('model')  # Selected model (e.g., "custom_model")
-        image_model = data.get('image_model)
+        image_model = data.get('image_model')
         if not message or not conversation_id:
             return jsonify({'error': 'Message and conversation_id are required'}), 400
 
