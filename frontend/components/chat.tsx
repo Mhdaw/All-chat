@@ -1,9 +1,8 @@
 'use client';
 
 
-import { useState, useEffect ,createContext} from 'react';
+import { useState, useLayoutEffect ,createContext} from 'react';
 import useSWR from 'swr';
-import { useIsMounted, useWindowSize } from 'usehooks-ts';
 import { ChatHeader } from '@/components/chat-header';
 import { PreviewMessage, ThinkingMessage } from '@/components/message';
 import { useScrollToBottom } from '@/components/use-scroll-to-bottom';
@@ -16,6 +15,7 @@ import { useParams } from 'next/navigation';
 import { MAIN_URL } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Attachment } from '@/lib/types';
+import { models } from '@/lib/utils';
 
 export const modelContext = createContext({})
 
@@ -33,8 +33,8 @@ export function Chat({
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState<string>("")
   const [isLoading, setLoading] = useState<boolean>(false)
-  const [model, setModel] = useState()
-  const ismounted = useIsMounted()
+  const [model, setModel] = useState(models[0])
+
   const handleSubmit = () => {
     setLoading(true)
     const newMessage: Message = {
@@ -52,7 +52,8 @@ export function Chat({
       },
       body: JSON.stringify({
         message: input,
-        conversation_id: chatId
+        conversation_id: chatId,
+        model:model.apiidentifier,
       })
     })
       .then(response => response.json())
@@ -85,14 +86,15 @@ export function Chat({
     fetcher,
   );
 
-  useEffect(() => {
+
+  useLayoutEffect(() => {
     fetch(`${MAIN_URL}/get_history/${chatId}`)
       .then(response => response.json())
       .then((data) => {
         console.log(data);
         setMessages((prev) => [...prev, ...data.history])
       })
-  }, [id])
+  }, [chatId])
 
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
@@ -108,9 +110,9 @@ export function Chat({
         <div ref={messagesContainerRef} className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4" >
           {displayMessages.length === 0 && <Overview />}
 
-          {displayMessages.map((message) => (
+          {displayMessages.map((message, i) => (
             <PreviewMessage
-              key={message.id}
+              key={i}
               chatId={id}
               message={message}
               isLoading={isLoading && message.id === displayMessages[displayMessages.length - 1]?.id}

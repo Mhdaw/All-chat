@@ -192,63 +192,64 @@ export function getDocumentTimestampByIndex(
 export const models = [
   {
     "id": 1,
-    "label": "Meta LLaMA 3.2 1B",
-    "apiidentifier": "meta-llama/Llama-3.2-1B",
-    "description": "A smaller version of LLaMA 3.2 with 1B parameters, good for general language generation."
+    "label": "Meta Llama 3.2 1B",
+    "apiidentifier": "Meta-Llama/Llama-3.2-1B",
+    "description": "A smaller version of Llama 3.2 with 1B parameters, good for general language generation."
   },
   {
     "id": 2,
-    "label": "Meta LLaMA 3.2 3B",
-    "apiidentifier": "meta-llama/Llama-3.2-3B",
-    "description": "A medium-size LLaMA 3.2 model with 3B parameters, suitable for a range of tasks."
+    "label": "Meta Llama 3.2 3B",
+    "apiidentifier": "Meta-Llama/Llama-3.2-3B",
+    "description": "A medium-size Llama 3.2 model with 3B parameters, suitable for a range of tasks."
   },
   {
+
     "id": 3,
-    "label": "Meta LLaMA 3.2 1B Instruct",
-    "apiidentifier": "meta-llama/Llama-3.2-1B-Instruct",
-    "description": "Instruction-tuned variant of LLaMA 3.2 with 1B parameters for following specific tasks."
+    "label": "Meta Llama 3.2 1B Instruct",
+    "apiidentifier": "Meta-Llama/Llama-3.2-1B-Instruct",
+    "description": "Instruction-tuned variant of Llama 3.2 with 1B parameters for following specific tasks."
   },
   {
     "id": 4,
-    "label": "Meta LLaMA 3.2 3B Instruct",
-    "apiidentifier": "meta-llama/Llama-3.2-3B-Instruct",
-    "description": "Instruction-tuned LLaMA 3.2 with 3B parameters for better task-oriented responses."
+    "label": "Meta Llama 3.2 3B Instruct",
+    "apiidentifier": "Meta-Llama/Llama-3.2-3B-Instruct",
+    "description": "Instruction-tuned Llama 3.2 with 3B parameters for better task-oriented responses."
   },
   {
     "id": 5,
-    "label": "Meta LLaMA 3.1 8B",
-    "apiidentifier": "meta-llama/Llama-3.1-8B",
-    "description": "A larger LLaMA 3.1 model with 8B parameters for advanced language tasks."
+    "label": "Meta Llama 3.1 8B",
+    "apiidentifier": "Meta-Llama/Llama-3.1-8B",
+    "description": "A larger Llama 3.1 model with 8B parameters for advanced language tasks."
   },
   {
     "id": 6,
-    "label": "Meta LLaMA 3.1 70B",
-    "apiidentifier": "meta-llama/Llama-3.1-70B",
-    "description": "A large-scale LLaMA 3.1 model with 70B parameters, powerful for complex tasks."
+    "label": "Meta Llama 3.1 70B",
+    "apiidentifier": "Meta-Llama/Llama-3.1-70B",
+    "description": "A large-scale Llama 3.1 model with 70B parameters, powerful for complex tasks."
   },
   {
     "id": 7,
-    "label": "Meta LLaMA 3.1 405B",
-    "apiidentifier": "meta-llama/Llama-3.1-405B",
-    "description": "Very large LLaMA 3.1 model with 405B parameters, designed for cutting-edge research."
+    "label": "Meta Llama 3.1 405B",
+    "apiidentifier": "Meta-Llama/Llama-3.1-405B",
+    "description": "Very large Llama 3.1 model with 405B parameters, designed for cutting-edge research."
   },
   {
     "id": 8,
-    "label": "Meta LLaMA 3.1 8B Instruct",
-    "apiidentifier": "meta-llama/Llama-3.1-8B-Instruct",
-    "description": "Instruction-tuned variant of LLaMA 3.1 with 8B parameters for improved task-specific tasks."
+    "label": "Meta Llama 3.1 8B Instruct",
+    "apiidentifier": "Meta-Llama/Llama-3.1-8B-Instruct",
+    "description": "Instruction-tuned variant of Llama 3.1 with 8B parameters for improved task-specific tasks."
   },
   {
     "id": 9,
-    "label": "Meta LLaMA 3.1 70B Instruct",
-    "apiidentifier": "meta-llama/Llama-3.1-70B-Instruct",
-    "description": "LLaMA 3.1 70B, fine-tuned for instruction following tasks and complex problem-solving."
+    "label": "Meta Llama 3.1 70B Instruct",
+    "apiidentifier": "Meta-Llama/Llama-3.1-70B-Instruct",
+    "description": "Llama 3.1 70B, fine-tuned for instruction following tasks and complex problem-solving."
   },
   {
     "id": 10,
-    "label": "Meta LLaMA 3.1 405B Instruct",
-    "apiidentifier": "meta-llama/Llama-3.1-405B-Instruct",
-    "description": "Instruction-tuned version of the massive 405B LLaMA 3.1, optimized for task completion."
+    "label": "Meta Llama 3.1 405B Instruct",
+    "apiidentifier": "Meta-Llama/Llama-3.1-405B-Instruct",
+    "description": "Instruction-tuned version of the massive 405B Llama 3.1, optimized for task completion."
   },
   {
     "id": 11,

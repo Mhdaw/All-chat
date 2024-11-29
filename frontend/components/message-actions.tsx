@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from './ui/tooltip';
 import { Pause, Play } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MAIN_URL } from '@/lib/utils';
 
 export function MessageActions({
@@ -31,11 +31,11 @@ export function MessageActions({
 
   if (isLoading) return null;
   if (message.role === 'user') return null;
-  const [audio, setAudio] = useState(document.createElement("audio"));
+  const audio = useRef<HTMLAudioElement>(null)
   useEffect(()=>{
-    audio.src = `${MAIN_URL}${message.audio_url|| `/audio/${message.audio_file}`}`
+    audio!.current!.src = `${MAIN_URL}${message.audio_url|| `/audio/${message.audio_file}`}`
     setAudioState("paused")
-    audio.onpause =()=>{
+    audio!.current!.onpause =()=>{
       setAudioState("paused")
     }
     
@@ -44,14 +44,14 @@ export function MessageActions({
   const play =()=>{
     console.log("playing");
     
-    audio.play()
+    audio!.current!.play()
     setAudioState("playing")
   }
 
   const stop =()=>{
     console.log("stopping");
     
-    audio?.pause()
+    audio?.current!.pause()
     setAudioState("paused")
   }
    
@@ -121,6 +121,7 @@ export function MessageActions({
               disabled={false}
             >
               {audioState == "paused" ? <Play /> : <Pause />}
+              <audio src={"null"} ref={audio} />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Play Or Pause</TooltipContent>
