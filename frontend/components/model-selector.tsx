@@ -1,6 +1,6 @@
 'use client';
 
-import { startTransition, useMemo, useOptimistic, useState } from 'react';
+import { startTransition, useMemo, useOptimistic, useState, useContext } from 'react';
 import { saveModelId } from '@/app/(chat)/actions';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { cn, models } from '@/lib/utils';
+import {modelContext} from "@/components/chat"
 
 import { CheckCirclFillIcon, ChevronDownIcon } from './icons';
 
@@ -23,7 +24,7 @@ export function ModelSelector({
   const [open, setOpen] = useState(false);
   const [optimisticModelId, setOptimisticModelId] =
     useOptimistic(selectedModelId);
-
+  const {model, setModel} = useContext(modelContext) as any;
   const selectModel = useMemo(
     () => models.find((model) => model.id.toString() === optimisticModelId),
     [optimisticModelId],
@@ -39,7 +40,7 @@ export function ModelSelector({
         )}
       >
         <Button variant="outline" className="md:px-2 md:h-[34px]">
-          {selectModel?.label}
+          {model?.label}
           <ChevronDownIcon />
         </Button>
       </DropdownMenuTrigger>
@@ -52,8 +53,9 @@ export function ModelSelector({
 
               startTransition(() => {
                 setOptimisticModelId(model.id.toString());
-                saveModelId(model.id.toString());
+                // saveModelId(model.id.toString());
               });
+              setModel(model)
             }}
             className="gap-4 group/item flex flex-row justify-between items-center"
             data-active={model.id.toString() === optimisticModelId}

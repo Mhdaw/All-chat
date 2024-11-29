@@ -1,7 +1,7 @@
 'use client';
 
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect ,createContext} from 'react';
 import useSWR from 'swr';
 import { useIsMounted, useWindowSize } from 'usehooks-ts';
 import { ChatHeader } from '@/components/chat-header';
@@ -17,7 +17,7 @@ import { MAIN_URL } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Attachment } from '@/lib/types';
 
-
+export const modelContext = createContext({})
 
 export function Chat({
   id,
@@ -33,6 +33,7 @@ export function Chat({
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState<string>("")
   const [isLoading, setLoading] = useState<boolean>(false)
+  const [model, setModel] = useState()
   const ismounted = useIsMounted()
   const handleSubmit = () => {
     setLoading(true)
@@ -101,6 +102,7 @@ export function Chat({
   const displayMessages = [...messages, ...(streamedMessage ? [streamedMessage] : [])];
   return (
     <>
+    <modelContext.Provider value={{model, setModel}} >
       <div className="flex flex-col min-w-0 h-dvh bg-background">
         <ChatHeader selectedModelId={selectedModelId} />
         <div ref={messagesContainerRef} className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4" >
@@ -146,6 +148,7 @@ export function Chat({
           />
         </form>
       </div>
+      </modelContext.Provider>
     </>
   );
 }
