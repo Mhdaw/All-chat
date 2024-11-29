@@ -431,6 +431,7 @@ def send_message():
         message = data.get('message')
         conversation_id = data.get('conversation_id')
         model = data.get('model')  # Selected model (e.g., "custom_model")
+        image_model = data.get('image_model)
         if not message or not conversation_id:
             return jsonify({'error': 'Message and conversation_id are required'}), 400
 
@@ -440,7 +441,7 @@ def send_message():
         if model_type == "open_model" and not torch.cuda.is_available():
             return jsonify({'error': 'GPU is not available. Please try another model.'}), 400
 
-        text_response, audio_filename = chat_service.get_response(conversation_id, message, model)
+        text_response, audio_filename = chat_service.get_response(conversation_id, message, model, image_model)
 
         chat_metadata[conversation_id]['timestamp'] = datetime.utcnow().isoformat()
         save_data(conversations, chat_metadata)
