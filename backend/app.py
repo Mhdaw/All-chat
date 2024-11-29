@@ -222,13 +222,16 @@ def send_message():
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
     try:
+        print(request.json)
         if 'audio' not in request.files:
-            return jsonify({'error': 'No audio file provided'}), 400
+            print("no audio")
+            return jsonify({'error': 'No audio file provided'}), 401
             
         audio_file = request.files['audio']
         conversation_id = request.form.get('conversation_id')
         
         if not conversation_id:
+            print("no convo")
             return jsonify({'error': 'conversation_id is required'}), 400
             
         # Save user's audio file

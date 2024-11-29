@@ -1,6 +1,9 @@
 import { Mic, Pause } from "lucide-react";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
+import useConverter from "@/hooks/use-converter";
+import { MAIN_URL } from "@/lib/utils";
+
 
 export function VoiceRecorder() {
   const [isRecording, setRecording] = useState(false);
@@ -36,20 +39,36 @@ export function VoiceRecorder() {
 
     };
 
-    mediaRecorder.onstop = () => {
+    mediaRecorder.onstop =async () => {
       console.log("stopingmedia");
 
       setRecording(false)
 
-      const blob = new Blob(chunks, { type: "audio/ogg" });
+      const blob = new Blob(chunks, { type: "audio/webm" });
+      console.log("blob", blob)
+      const formData = new FormData();
+      formData.append('audio', blob, 'audio.webm');
+      formData.append("conversation_id", "65916e21-0691-4dbc-aace-6c5315cf4cb3")
+
+      // const headers = {
+      //   'Accept': 'application/json',  // Expected response type
+      // };
+
+      // const data =await fetch(MAIN_URL+"/upload_audio", {
+      //   method: 'POST',
+      //   headers: headers, // Include headers if necessary
+      //   body: formData,
+      // });
+      // console.log(await data.json())
+      const file = new File([blob], "voice", { type: "webm" });
 
       const audioURL = window.URL.createObjectURL(blob);
+      
       const audio = new Audio(audioURL)
       audio.play()
-      const file = new File([blob], "voice", { type: "webm" });
+      
       console.log(file);
       console.log(audio);
-
       const link = document.createElement('a');
       link.href = audioURL;
       console.log(audioURL);
