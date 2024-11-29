@@ -13,7 +13,7 @@ from pydub import AudioSegment
 import io
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-
+import diffusers 
 from speech2text import transcribe_speech
 from text2speech import generate_speech
 
@@ -28,11 +28,14 @@ logging.basicConfig(level=logging.DEBUG)
 CONVERSATIONS_FILE = 'conversations.json'
 METADATA_FILE = 'chat_metadata.json'
 AUDIO_FOLDER = 'audio_files'
+IMAGE_FOLDER = 'image_files'
 
 # Create audio folder if it doesn't exist
 if not os.path.exists(AUDIO_FOLDER):
     os.makedirs(AUDIO_FOLDER)
-
+if not os.path.exists(IMAGE_FOLDER):
+    os.makedirs(IMAGE_FOLDER)
+    
 def load_data():
     try:
         if os.path.exists(CONVERSATIONS_FILE):
@@ -64,7 +67,19 @@ def save_data(conversations, chat_metadata):
 conversations, chat_metadata = load_data()
 
 system_prompt = """
-You are a helpful assistant designed to assist users with a wide range of queries and tasks. Your primary goal is to provide accurate, clear, and concise information. 
+You are a helpful assistant designed to assist users with a wide range of queries and tasks. You have access to these functions:
+
+1. get_stock_price(symbol: str): Gets the current stock price for a given stock symbol
+   Example: FUNCTION_CALL: get_stock_price("AAPL")
+
+2. calculate(expression: str): Performs a mathematical calculation
+   Example: FUNCTION_CALL: calculate("100 * 0.15")
+
+3. generate_image(prompt: str): Generates an image based on the given prompt
+   Example: FUNCTION_CALL: generate_image("A beautiful sunset over the ocean")
+   
+To use these functions, respond with FUNCTION_CALL: followed by the function name and parameters.
+Your primary goal is to provide accurate, clear, and concise information. 
 
 - **Be Friendly**: Always maintain a polite and friendly tone. Make users feel comfortable asking questions.
 - **Be Informative**: Provide detailed explanations when necessary, but ensure the information is easy to understand.
@@ -73,6 +88,8 @@ You are a helpful assistant designed to assist users with a wide range of querie
 - **Respect Privacy**: Never ask for personal information unless absolutely necessary for the task at hand.
 - **Stay Neutral**: Avoid taking sides on controversial topics and present balanced information.
 
+If no function is needed, respond normally.
+Keep responses concise and natural,
 Your responses should be tailored to the user's level of knowledge and the context of their questions. Always strive to be a reliable source of information and assistance.
 """
 
@@ -113,6 +130,71 @@ def get_custom_model_response(model, tokenizer, prompt):
         logging.error(f"Error generating response: {e}")
         return "Error generating response with the custom model."
 
+def handle_image_generator(model_id):
+  if "stable-diffusion" in model_id:
+    generator_type = "stable-diffusion"
+  elif "FLUX" in model_id:
+    generator_type = "flux"
+  else:
+    raise ValueError(f"Unsupported model type: {model_id}")
+
+def load_stable_diffusion_generator(model_id):
+  pipe = diffusers.StableDiffusion3Pipeline.from_pretrained(model_id, torch_dtype=torch.float16)
+  pipe = pipe.to("cuda")
+  return pipe
+
+def load_flux_generator(model_id):
+  pipe = diffusers.FluxPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
+  pipe.enable_model_cpu_offload() 
+  pipe = pipe.to("cuda")
+  return pipe
+
+def load_image_generator(model_id):
+  generator_type = handle_image_generator(model_id)
+
+  if generator_type == "stable-diffusion":
+    return load_stable_diffusion_generator(model_id)
+  elif generator_type == "flux":
+    return load_flux_generator(model_id)
+
+def generate_image(prompt, model_id, IMAGE_FOLDER):
+  try:
+    if not torch.cuda.is_available():
+              return None, None, "GPU is not available. Please try another model."
+    generator_type = handle_image_generator(model_id)
+    image_id = str(uuid.uuid4())
+
+    if generator_type == "stable-diffusion":
+      pipe = load_stable_diffusion_generator(model_id)
+      image = pipe(
+          prompt,
+          num_inference_steps=28,
+          guidance_scale=3.5,
+      ).images[0]
+      
+      image.save(f"{image_id}.png")
+      image_path = os.path.join(IMAGE_FOLDER, f"{image_id}.png")
+      return image_path, image_id
+
+    elif generator_type == "flux":
+      pipe = load_flux_generator(model_id)
+      image = pipe(
+          prompt,
+          height=1024,
+          width=1024,
+          guidance_scale=3.5,
+          num_inference_steps=50,
+          max_sequence_length=512,
+          generator=torch.Generator("cpu").manual_seed(0)
+      ).images[0]
+      image_path = os.path.join(IMAGE_FOLDER, f"{image_id}.png")
+      image.save(f"{image_id}.png")
+      return image_path, image_id
+  except Exception as e:
+        logging.error(f"Error loading custom model: {e}")
+        return None, None, "Failed to load the image model."
+      
+
 API_MODELS  = ["Meta-Llama-3-1-8B-Instruct-FP8","Meta-Llama-3-1-405B-Instruct-FP8","Meta-Llama-3-2-3B-Instruct","nvidia-Llama-3-1-Nemotron-70B-Instruct-HF"]
 
 def determine_model_type(model_name):
@@ -123,7 +205,7 @@ def determine_model_type(model_name):
     return "api_model" if model_name in API_MODELS else "open_model"
 
 class ChatService:
-    def __init__(self, api_key=None, base_url=None):
+    def __init__(self, api_key="sk-s2Hpm8x0MkhzV743Ecqzqw", base_url="https://chatapi.akash.network/api/v1"):
         try:
             self.api_key = api_key or os.getenv('API_KEY')
             self.base_url = base_url or os.getenv('BASE_URL')
@@ -139,11 +221,70 @@ class ChatService:
             logging.error(f"Chat Service initialization error: {e}")
             raise
 
-    def get_response(self, conversation_id, message, model=None):
+    def get_stock_price(self, symbol: str) -> dict:
+        """Get current stock price for a given symbol"""
+        try:
+            stock = yf.Ticker(symbol)
+            info = stock.info
+            return {
+                "current_price": info.get("currentPrice", "N/A"),
+                "company_name": info.get("longName", "N/A"),
+                "currency": info.get("currency", "USD")
+            }
+        except Exception as e:
+            return {"error": f"Could not fetch stock data: {str(e)}"}
+
+    def calculate(self, expression: str) -> dict:
+        """Safely evaluate a mathematical expression"""
+        try:
+            # Use eval safely with limited builtins
+            allowed_names = {"abs": abs, "round": round}
+            code = compile(expression, "<string>", "eval")
+            for name in code.co_names:
+                if name not in allowed_names:
+                    raise NameError(f"Use of {name} not allowed")
+            result = eval(expression, {"__builtins__": {}}, allowed_names)
+            return {"result": result}
+        except Exception as e:
+            return {"error": f"Could not calculate: {str(e)}"}
+
+    def _generate_image(self, prompt: str) -> str:
+      """Generate an image based on the given prompt."""
+      image_path, image_id = generate_image(prompt, self.image_model, IMAGE_FOLDER) #todo: handle model_id, IMAGE_FOLDER
+      return {"image_path": image_path, "image_id": image_id}
+
+    def execute_function(self, function_text: str) -> str:
+        """Execute a function based on the text command"""
+        # Extract function name and parameters using regex
+        match = re.match(r'FUNCTION_CALL: (\w+)\((.*)\)', function_text)
+        if not match:
+            return "Error: Invalid function call format"
+        
+        function_name, params_str = match.groups()
+        
+        # Remove quotes from parameters and split if multiple
+        params = [p.strip('"').strip("'") for p in params_str.split(',')]
+
+        function_mapping = {
+            "get_stock_price": lambda p: self.get_stock_price(p[0]),
+            "calculate": lambda p: self.calculate(p[0]),
+            "_generate_image": lambda p: self.generate_image(p[0])
+        }
+        
+        if function_name in function_mapping:
+            try:
+                result = function_mapping[function_name](params)
+                return json.dumps(result)
+            except Exception as e:
+                return f"Error executing function: {str(e)}"
+        return "Error: Function not found"
+
+    def get_response(self, conversation_id, message, model=None, image_model=None):
         """
         Get a response from the assistant based on the model type.
         """
         try:
+            self.image_model = image_model
             # Determine model type
             model_type = determine_model_type(model or "Meta-Llama-3-1-8B-Instruct-FP8")
             
@@ -154,14 +295,14 @@ class ChatService:
             conversations[conversation_id].append({
                 "role": "user", 
                 "content": message,
-                "audio_file": None
+                #"audio_file": None
             })
             
             if model_type == "open_model":
                 # Load custom model and tokenizer
                 custom_model, tokenizer, error = load_custom_model_and_tokenizer(
                     model_id=model, 
-                    hf_token=os.getenv("HF_token") 
+                    hf_token=os.getenv("HF_TOKEN") 
                 )
                 if error:
                     return error, None
@@ -174,9 +315,36 @@ class ChatService:
                     {"role": msg["role"], "content": msg["content"]} for msg in conversations[conversation_id]
                 ]
                 response = self.client.chat.completions.create(
-                    model=model or "Meta-Llama-3-1-8B-Instruct-FP8",  # Default model
+                    model=model or "Meta-Llama-3-1-405B-Instruct-FP8",  # Default model
                     messages=messages
-                ).choices[0].message.content
+                )
+                assistant_response = response.choices[0].message.content
+                if "FUNCTION_CALL:" in assistant_response:
+                            # Split response into function call and rest of message
+                            parts = assistant_response.split("\n", 1)
+                            function_call = parts[0].strip()
+                            
+                            # Execute function
+                            function_result = self.execute_function(function_call)
+                            
+                            # Add function result to messages
+                            messages.append({
+                                "role": "assistant",
+                                "content": function_call
+                            })
+                            messages.append({
+                                "role": "function",
+                                "content": function_result
+                            })
+                            
+                            # Get final response incorporating function result
+                            final_response = self.client.chat.completions.create(    
+                                model=model or "Meta-Llama-3-1-8B-Instruct-FP8",  # Default model
+                                messages=messages
+                              )
+                            assistant_response = final_response.choices[0].message.content
+
+                response = assistant_response
                 audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER)
 
             conversations[conversation_id].append({
@@ -186,10 +354,11 @@ class ChatService:
             })
             
             save_data(conversations, chat_metadata)
-            return response, audio_filename
+            return response
         except Exception as e:
             logging.error(f"Error in get_response: {e}")
             raise
+
 try:
     chat_service = ChatService()
 except Exception as e:
@@ -350,6 +519,17 @@ def serve_audio(filename):
     except Exception as e:
         logging.error(f"Error serving audio file: {e}")
         return jsonify({'error': 'Audio file not found'}), 404
+
+@app.route('/image/<filename>')
+def serve_image(filename):
+    try:
+        return send_file(
+            os.path.join(IMAGE_FOLDER, filename),
+            mimetype='image/png'
+        )
+    except Exception as e:
+        logging.error(f"Error serving image file: {e}")
+        return jsonify({'error': 'Image file not found'}), 404
 
 
 @app.route('/get_history/<conversation_id>')
