@@ -9,7 +9,10 @@ import uuid
 from datetime import datetime, timezone
 import json
 import librosa
+from pydub import AudioSegment
 import io
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 from speech2text import transcribe_speech
 from text2speech import generate_speech
@@ -73,6 +76,52 @@ You are a helpful assistant designed to assist users with a wide range of querie
 Your responses should be tailored to the user's level of knowledge and the context of their questions. Always strive to be a reliable source of information and assistance.
 """
 
+def load_custom_model_and_tokenizer(model_id, hf_token):
+    try:
+        # Check if a GPU is available
+        if not torch.cuda.is_available():
+            return None, None, "GPU is not available. Please try another model."
+
+        # Load the model and tokenizer with quantization
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.bfloat16
+        )
+        tokenizer = AutoTokenizer.from_pretrained(model_id, use_auth_token=hf_token)
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            use_auth_token=hf_token,
+            quantization_config=quantization_config,
+            device_map="auto"
+        )
+        return model, tokenizer, None
+    except Exception as e:
+        logging.error(f"Error loading custom model: {e}")
+        return None, None, "Failed to load the custom model."
+
+# Define a function to get a response using the custom model
+def get_custom_model_response(model, tokenizer, prompt):
+    try:
+        input_ids = tokenizer(prompt, return_tensors="pt").to(model.device)
+        with torch.no_grad():
+            outputs = model.generate(**input_ids, max_new_tokens=256)
+        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        return response
+    except Exception as e:
+        logging.error(f"Error generating response: {e}")
+        return "Error generating response with the custom model."
+
+API_MODELS  = ["Meta-Llama-3-1-8B-Instruct-FP8","Meta-Llama-3-1-405B-Instruct-FP8","Meta-Llama-3-2-3B-Instruct","nvidia-Llama-3-1-Nemotron-70B-Instruct-HF"]
+
+def determine_model_type(model_name):
+    """
+    Determine if the given model is an API model or an open model.
+    Returns "api_model" if the model is in the API list, otherwise "open_model".
+    """
+    return "api_model" if model_name in API_MODELS else "open_model"
+
 class ChatService:
     def __init__(self, api_key=None, base_url=None):
         try:
@@ -90,8 +139,14 @@ class ChatService:
             logging.error(f"Chat Service initialization error: {e}")
             raise
 
-    def get_response(self, conversation_id, message):
+    def get_response(self, conversation_id, message, model=None):
+        """
+        Get a response from the assistant based on the model type.
+        """
         try:
+            # Determine model type
+            model_type = determine_model_type(model or "Meta-Llama-3-1-8B-Instruct-FP8")
+            
             if conversation_id not in conversations:
                 conversations[conversation_id] = []
                 
@@ -102,34 +157,39 @@ class ChatService:
                 "audio_file": None
             })
             
-            messages = [
-                {"role": "system", "content": system_prompt}
-            ] + [{
-                "role": msg["role"], 
-                "content": msg["content"]
-            } for msg in conversations[conversation_id]]
-            
-            response = self.client.chat.completions.create(
-                model="Meta-Llama-3-1-8B-Instruct-FP8",
-                messages=messages
-            )
-            
-            assistant_message = response.choices[0].message.content
-            audio_filename = generate_speech(assistant_message, language="en", AUDIO_FOLDER=AUDIO_FOLDER)
-            
+            if model_type == "open_model":
+                # Load custom model and tokenizer
+                custom_model, tokenizer, error = load_custom_model_and_tokenizer(
+                    model_id=model, 
+                    hf_token=os.getenv("HF_token") 
+                )
+                if error:
+                    return error, None
+
+                response = get_custom_model_response(custom_model, tokenizer, message)
+                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER)
+            else:
+                # Use the default chat service for API models
+                messages = [{"role": "system", "content": system_prompt}] + [
+                    {"role": msg["role"], "content": msg["content"]} for msg in conversations[conversation_id]
+                ]
+                response = self.client.chat.completions.create(
+                    model=model or "Meta-Llama-3-1-8B-Instruct-FP8",  # Default model
+                    messages=messages
+                ).choices[0].message.content
+                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER)
+
             conversations[conversation_id].append({
                 "role": "assistant",
-                "content": assistant_message,
+                "content": response,
                 "audio_file": audio_filename
             })
             
             save_data(conversations, chat_metadata)
-            
-            return assistant_message, audio_filename
+            return response, audio_filename
         except Exception as e:
             logging.error(f"Error in get_response: {e}")
             raise
-
 try:
     chat_service = ChatService()
 except Exception as e:
@@ -201,22 +261,24 @@ def send_message():
         data = request.json
         message = data.get('message')
         conversation_id = data.get('conversation_id')
-        
+        model = data.get('model')  # Selected model (e.g., "custom_model")
         if not message or not conversation_id:
             return jsonify({'error': 'Message and conversation_id are required'}), 400
-            
-        text_response, audio_filename = chat_service.get_response(conversation_id, message)
-        
+
+        model_type = determine_model_type(model)
+
+        # Handle custom model
+        if model_type == "open_model" and not torch.cuda.is_available():
+            return jsonify({'error': 'GPU is not available. Please try another model.'}), 400
+
+        text_response, audio_filename = chat_service.get_response(conversation_id, message, model)
+
         chat_metadata[conversation_id]['timestamp'] = datetime.utcnow().isoformat()
         save_data(conversations, chat_metadata)
-        logging.info("Response generated successfully...")
-        return jsonify({
-            'response': text_response,
-            'audio_url': f'/audio/{audio_filename}' if audio_filename else None
-        })
+        return jsonify({'text': text_response, 'audio_file': audio_filename})
     except Exception as e:
-        logging.error(f"Message send error: {traceback.format_exc()}")
-        return jsonify({'error': str(e)}), 500
+        logging.error(f"Error in /send_message: {e}")
+        return jsonify({'error': 'Failed to process the message'}), 500
 
 
 @app.route('/upload_audio', methods=['POST'])
@@ -228,6 +290,8 @@ def upload_audio():
             return jsonify({'error': 'No audio file provided'}), 401
             
         audio_file = request.files['audio']
+        if audio_file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
         conversation_id = request.form.get('conversation_id')
         
         if not conversation_id:
@@ -235,11 +299,16 @@ def upload_audio():
             return jsonify({'error': 'conversation_id is required'}), 400
             
         # Save user's audio file
-        user_audio_filename = f"user_{uuid.uuid4()}.wav"
-        user_audio_path = os.path.join(AUDIO_FOLDER, user_audio_filename)
-        audio_file.save(user_audio_path)
+        #user_audio_filename = f"user_{uuid.uuid4()}.webm"
+        temp_path = os.path.join(AUDIO_FOLDER, f"user_{uuid.uuid4()}.webm")
+        audio_file.save(temp_path)
+
+        wav_path = os.path.join(AUDIO_FOLDER, f"{uuid.uuid4()}.wav")
+        audio = AudioSegment.from_file(temp_path, format="webm")
+        audio.export(wav_path, format="wav")
+        os.remove(temp_path)
         
-        transcribed_text = transcribe_speech(user_audio_path)
+        transcribed_text = transcribe_speech(wav_path)
         
         if transcribed_text:
             # Add user message with audio
