@@ -4,20 +4,21 @@
 import { useState, useLayoutEffect ,createContext} from 'react';
 import useSWR from 'swr';
 import { ChatHeader } from '@/components/chat-header';
-import { PreviewMessage, ThinkingMessage } from '@/components/message';
+import { PreviewMessage, ThinkingMessage,PreviewImage } from '@/components/message';
 import { useScrollToBottom } from '@/components/use-scroll-to-bottom';
 import type { Vote } from '@/lib/db/schema';
 import { fetcher, generateUUID } from '@/lib/utils';
-import { Message } from '@/lib/types';
+import { Message, ImageMessage } from '@/lib/types';
 import { MultimodalInput } from './multimodal-input';
-import { Overview } from './overview';
+import { Overview, ImageOverview } from './overview';
 import { useParams } from 'next/navigation';
 import { MAIN_URL } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Attachment } from '@/lib/types';
 import { models } from '@/lib/utils';
 
-export const modelContext = createContext({})
+
+export const modelContext = createContext<any>(null)
 
 export function Chat({
   id,
@@ -34,6 +35,8 @@ export function Chat({
   const [input, setInput] = useState<string>("")
   const [isLoading, setLoading] = useState<boolean>(false)
   const [model, setModel] = useState(models[0])
+  const [botType, setBotType] = useState<"CHAT"|"IMAGE">("CHAT")
+  const [imagePath, setPath] = useState<ImageMessage[]>([])
 
   const handleSubmit = () => {
     setLoading(true)
@@ -98,16 +101,20 @@ export function Chat({
 
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
+    const [imgContainerRef, imgEndRef] =
+    useScrollToBottom<HTMLDivElement>();
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
 
   const displayMessages = [...messages, ...(streamedMessage ? [streamedMessage] : [])];
   return (
     <>
-    <modelContext.Provider value={{model, setModel}} >
+    <modelContext.Provider value={{model, setModel, botType, setBotType}} >
       <div className="flex flex-col min-w-0 h-dvh bg-background">
         <ChatHeader selectedModelId={selectedModelId} />
-        <div ref={messagesContainerRef} className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4" >
+        {
+          botType == "CHAT" ? (
+            <div ref={messagesContainerRef} className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4" >
           {displayMessages.length === 0 && <Overview />}
 
           {displayMessages.map((message, i) => (
@@ -126,6 +133,27 @@ export function Chat({
 
           <div ref={messagesEndRef} className="shrink-0 min-w-[24px] min-h-[24px]" />
         </div>
+          ):(
+            <div ref={imgContainerRef} className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4" >
+          {imagePath.length === 0 && <ImageOverview />}
+
+          {imagePath.map((message, i) => (
+            <PreviewImage
+              key={i}
+              chatId={id}
+              image={message}
+              isLoading={isLoading && message.path === imagePath[imagePath.length - 1]?.path}
+            />
+          ))}
+
+          {isLoading && imagePath.length > 0 && imagePath[imagePath.length - 1].role === 'user' && (
+            <ThinkingMessage />
+          )}
+
+          <div ref={imgEndRef} className="shrink-0 min-w-[24px] min-h-[24px]" />
+        </div>
+          )
+        }
 
         <form
           className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl"

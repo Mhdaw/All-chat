@@ -7,7 +7,8 @@ import type { Vote } from '@/lib/db/schema';
 import { SparklesIcon } from './icons';
 import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
-import { Message } from '@/lib/types';
+import { Message, ImageMessage } from '@/lib/types';
+import Image from 'next/image';
 
 export const PreviewMessage = ({
   chatId,
@@ -84,6 +85,46 @@ export const ThinkingMessage = () => {
           <div className="flex flex-col gap-4 text-muted-foreground">
             Thinking...
           </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+
+export const PreviewImage = ({
+  chatId,
+  image,
+  isLoading,
+}: {
+  chatId: string;
+  image: ImageMessage;
+  isLoading: boolean;
+}) => {
+  return (
+    <motion.div
+      className="w-full mx-auto max-w-3xl px-4 group/message"
+      initial={{ y: 5, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      data-role={image.role}
+    >
+      <div
+        className={cx(
+          'group-data-[role=user]/message:bg-primary group-data-[role=user]/message:text-primary-foreground flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
+        )}
+      >
+        {image.role === 'ai' && (
+          <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
+            <SparklesIcon size={14} />
+          </div>
+        )}
+
+        <div className="flex flex-col gap-2 w-full">
+          {image.path && (
+            <div className="flex flex-col gap-4">
+              <Image src={image.path} alt='ai message' />
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

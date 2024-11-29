@@ -8,15 +8,16 @@ import { Button } from '@/components/ui/button';
 import { BetterTooltip } from '@/components/ui/tooltip';
 import { PlusIcon, VercelIcon } from './icons';
 import { useSidebar } from './ui/sidebar';
-import { useCallback } from 'react';
-import { MAIN_URL } from '@/lib/utils';
+import { useCallback, useContext } from 'react';
+import { cn, MAIN_URL } from '@/lib/utils';
 import { ModelSelector } from './model-selector';
-
+import { modelContext } from './chat';
 export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const router = useRouter();
   const { open } = useSidebar();
   const localStorage = useReadLocalStorage("chats") as []
   const [newStorage, setLocalStorage] = useLocalStorage<any>("chats", localStorage)
+  const { botType,setBotType} = useContext(modelContext)
   const newChat = useCallback(()=>{
     fetch(`${MAIN_URL}/create_chat`, {
       method: 'POST',
@@ -54,6 +55,21 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
         selectedModelId={selectedModelId}
         className="order-1 md:order-2"
       />
+      <div className=' absolute right-[50%] py-4 translate-x-[50%]'>
+            <Button
+            onClick={()=>setBotType("CHAT")}
+            className={cn(' hover:bg-slate-100 rounded-none bg-black text-white border-r rounded-l-md', botType == "CHAT"&& "bg-slate-50 text-black hover:bg-slate-800")}
+             >
+              Chats
+            </Button>
+            <Button
+            onClick={()=>setBotType("IMAGE")}
+            className={cn('hover:bg-slate-100 rounded-none bg-black text-white border-l rounded-r-md',  botType == "IMAGE"&& "bg-slate-50 text-black hover:bg-slate-800")}
+             >
+              Image
+            </Button>
+      </div>
+
       <Button
         className="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hidden md:flex py-1.5 px-2 h-fit md:h-[34px] order-4 md:ml-auto"
         asChild

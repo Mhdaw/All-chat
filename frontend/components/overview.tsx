@@ -47,3 +47,51 @@ export const Overview = () => {
     </motion.div>
   );
 };
+
+
+
+
+
+export const ImageOverview = () => {
+  return (
+    <motion.div
+      key="overview"
+      className="max-w-3xl mx-auto md:mt-20"
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ delay: 0.5 }}
+    >
+      <div className="rounded-xl p-6 flex flex-col gap-8 leading-relaxed text-center max-w-xl">
+        <p className="flex flex-row justify-center gap-4 items-center">
+          <Languages size={32} />
+          <span>+</span>
+          <Mic size={32} />
+        </p>
+        <p>
+          Welcome to{' '}
+          <span className="font-medium text-blue-600">AkashImage AI Generator</span>, your
+          Amazing AI-powered image generator for providing ai models. 
+          AkashImage AI Generator uses advanced ai recognition and AI
+          visuals to help get you the best photorealistic images.
+        </p>
+        <p>
+          Whether you&apos;re looking to improve your website deisgn,{' '}
+          <span className="font-medium">AkashImage AI Generator</span> provides you with
+          good realistic photos to match your needs.
+        </p>
+        <p>
+          Explore more features and get started with AkashImage AI Generator today by
+          visiting our{' '}
+          <Link
+            className="font-medium underline underline-offset-4"
+            href="/features"
+          >
+            Features Page
+          </Link>
+          .
+        </p>
+      </div>
+    </motion.div>
+  );
+};

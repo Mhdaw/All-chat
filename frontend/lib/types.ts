@@ -19,3 +19,9 @@ export interface Attachment {
 
   url: string;
 }
+
+export type ImageMessage = {
+  role:"user"|"ai",
+  path?:string,
+  message?:string
+}
