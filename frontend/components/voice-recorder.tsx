@@ -17,6 +17,7 @@ export function VoiceRecorder() {
       navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
 
     }
+    return media?.stop()
   }, []);
 
   const onSuccess = (stream: MediaStream) => {

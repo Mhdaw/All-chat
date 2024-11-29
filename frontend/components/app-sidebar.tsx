@@ -20,6 +20,7 @@ import Link from 'next/link';
 import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
 import { useCallback} from 'react';
 import { MAIN_URL } from '@/lib/utils';
+import { ModelSelector } from './model-selector';
 
 export function AppSidebar() {
   const router = useRouter();
@@ -76,6 +77,7 @@ export function AppSidebar() {
                 <PlusIcon />
               </Button>
             </BetterTooltip>
+            
           </div>
         </SidebarMenu>
       </SidebarHeader>

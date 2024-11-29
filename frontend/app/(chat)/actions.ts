@@ -1,7 +1,7 @@
 'use server';
 
 import { MAIN_URL } from '@/lib/utils';
-
+import { cookies } from 'next/headers';
 
 export const createChat =async()=>{
     const data = await fetch(`${MAIN_URL}/create_chat`, {
@@ -18,4 +18,9 @@ export const createChat =async()=>{
     console.log(error);
     
    }
+}
+
+export async function saveModelId(model: string) {
+  const cookieStore = await cookies();
+  cookieStore.set('model-id', model);
 }
