@@ -6,5 +6,6 @@ flask_cors
 gtts
 transformers
 torch
+diffusers 
 librosa
 pydub
