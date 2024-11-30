@@ -15,11 +15,11 @@ def load_transcribe_model(model_name):
     model.config.forced_decoder_ids = None
     return model, processor
 
-
-def transcribe_speech(audio_file, model_name):
+model, processor = load_transcribe_model(model_name)
+def transcribe_speech(audio_file): #, model_name
     """Transcribe speech from audio file"""
     try:
-        model, processor = load_transcribe_model(model_name)
+        #model, processor = load_transcribe_model(model_name)
         audio, sr = librosa.load(audio_file, sr=48000)
         audio_resampled = librosa.resample(audio, orig_sr=sr, target_sr=16000)
         input_features = processor(
