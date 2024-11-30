@@ -8,17 +8,6 @@ import { MAIN_URL } from "@/lib/utils";
 export function VoiceRecorder() {
   const [isRecording, setRecording] = useState(false);
   const [media, setMedia] = useState<MediaRecorder>();
-  useEffect(() => {
-    if (navigator.mediaDevices.getUserMedia) {
-      console.log("The mediaDevices.getUserMedia() method is supported.");
-
-      const constraints = { audio: true };
-
-      navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
-
-    }
-    return media?.stop()
-  }, []);
 
   const onSuccess = (stream: MediaStream) => {
     console.log("succcessfull");
@@ -27,7 +16,7 @@ export function VoiceRecorder() {
     const mediaRecorder = new MediaRecorder(stream);
 
     setMedia(mediaRecorder)
-
+    mediaRecorder.start()
 
     mediaRecorder.onstart = () => {
       setRecording(true)
@@ -47,21 +36,22 @@ export function VoiceRecorder() {
 
       const blob = new Blob(chunks, { type: "audio/webm" });
       console.log("blob", blob)
+      const file = new File([blob], "voice", { type: "audio/webm" });
       const formData = new FormData();
-      formData.append('audio', blob, 'audio.webm');
-      formData.append("conversation_id", "65916e21-0691-4dbc-aace-6c5315cf4cb3")
+      formData.append('audio', file, 'audio.webm');
+      formData.append("conversation_id", )
 
-      // const headers = {
-      //   'Accept': 'application/json',  // Expected response type
-      // };
+      const headers = {
+        'Accept': 'application/json',  // Expected response type
+      };
 
-      // const data =await fetch(MAIN_URL+"/upload_audio", {
-      //   method: 'POST',
-      //   headers: headers, // Include headers if necessary
-      //   body: formData,
-      // });
-      // console.log(await data.json())
-      const file = new File([blob], "voice", { type: "webm" });
+      const data =await fetch(MAIN_URL+"/upload_audio", {
+        method: 'POST',
+        headers: headers, // Include headers if necessary
+        body: formData,
+      });
+      console.log(await data.json())
+      
 
       const audioURL = window.URL.createObjectURL(blob);
       
@@ -89,6 +79,14 @@ export function VoiceRecorder() {
   }
 
   const startRecording = () => {
+    console.log(media);
+    if (!media &&  navigator.mediaDevices.getUserMedia) {
+      console.log("The mediaDevices.getUserMedia method is supported.");
+
+      const constraints = { audio: true };
+      navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
+
+    }
     setRecording(true)
     media?.start()
 

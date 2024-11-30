@@ -431,7 +431,7 @@ def send_message():
         message = data.get('message')
         conversation_id = data.get('conversation_id')
         model = data.get('model')  # Selected model (e.g., "custom_model")
-        image_model = data.get('image_model)
+        image_model = data.get('image_model')
         if not message or not conversation_id:
             return jsonify({'error': 'Message and conversation_id are required'}), 400
 
@@ -454,7 +454,7 @@ def send_message():
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
     try:
-        print(request.json)
+        print(request.files)
         if 'audio' not in request.files:
             print("no audio")
             return jsonify({'error': 'No audio file provided'}), 401
@@ -469,7 +469,7 @@ def upload_audio():
             return jsonify({'error': 'conversation_id is required'}), 400
             
         # Save user's audio file
-        #user_audio_filename = f"user_{uuid.uuid4()}.webm"
+        user_audio_filename = f"user_{uuid.uuid4()}.webm"
         temp_path = os.path.join(AUDIO_FOLDER, f"user_{uuid.uuid4()}.webm")
         audio_file.save(temp_path)
 

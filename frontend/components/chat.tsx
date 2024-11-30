@@ -18,6 +18,7 @@ import { Attachment } from '@/lib/types';
 import { models } from '@/lib/utils';
 
 
+
 export const modelContext = createContext<any>(null)
 
 export function Chat({
@@ -109,6 +110,7 @@ export function Chat({
   const displayMessages = [...messages, ...(streamedMessage ? [streamedMessage] : [])];
   return (
     <>
+
     <modelContext.Provider value={{model, setModel, botType, setBotType}} >
       <div className="flex flex-col min-w-0 h-dvh bg-background">
         <ChatHeader selectedModelId={selectedModelId} />

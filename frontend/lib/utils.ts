@@ -187,20 +187,34 @@ export function getDocumentTimestampByIndex(
   return documents[index].createdAt;
 }
 
+["Meta-Llama-3-1-8B-Instruct-FP8","Meta-Llama-3-1-405B-Instruct-FP8","Meta-Llama-3-2-3B-Instruct","nvidia-Llama-3-1-Nemotron-70B-Instruct-HF"]
 
 
 export const models = [
+  
+  {
+    "id": 101,
+    "label": "Meta Llama 3.2 1B",
+    "apiidentifier": "Meta-Llama-3-1-8B-Instruct-FP8",
+    "description": "A smaller version of Meta Llama 3.1 with 8B parameters, good for general language generation."
+  },
+  {
+    "id": 102,
+    "label": "Meta Llama 3.2 1B",
+    "apiidentifier": "Meta-Llama-3-1-405B-Instruct-FP8",
+    "description": "A smaller version of Meta Llama 3.1  with 405b parameters, good for general language generation."
+  },
   {
     "id": 1,
-    "label": "Meta Llama 3.2 1B",
-    "apiidentifier": "Meta-Llama/Llama-3.2-1B",
-    "description": "A smaller version of Llama 3.2 with 1B parameters, good for general language generation."
+    "label": "Meta Llama 3.2 3B ",
+    "apiidentifier": "Meta-Llama-3-2-3B-Instruct",
+    "description": "A smaller version of Llama 3.2 with 3B parameters, good for general language generation."
   },
   {
     "id": 2,
-    "label": "Meta Llama 3.2 3B",
-    "apiidentifier": "Meta-Llama/Llama-3.2-3B",
-    "description": "A medium-size Llama 3.2 model with 3B parameters, suitable for a range of tasks."
+    "label": "nvidia-Llama 3.1 Nemotron",
+    "apiidentifier": "nvidia-Llama-3-1-Nemotron-70B-Instruct-HF",
+    "description": "A medium-size nvidia-Llama 3.1 model with Nemotron 70b parameters, suitable for a range of tasks."
   },
   {
 

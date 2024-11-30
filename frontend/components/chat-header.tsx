@@ -12,6 +12,11 @@ import { useCallback, useContext } from 'react';
 import { cn, MAIN_URL } from '@/lib/utils';
 import { ModelSelector } from './model-selector';
 import { modelContext } from './chat';
+
+
+
+
+
 export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const router = useRouter();
   const { open } = useSidebar();
