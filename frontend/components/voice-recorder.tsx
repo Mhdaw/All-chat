@@ -1,11 +1,12 @@
 import { Mic, Pause } from "lucide-react";
 import { Button } from "./ui/button";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { MAIN_URL } from "@/lib/utils";
 import { useParams } from "next/navigation";
+import { Message } from "@/lib/types";
 
 
-export function VoiceRecorder({setMessages, stop}:any) {
+export function VoiceRecorder({setMessages}:{setMessages:Dispatch<SetStateAction<Array<Message>>>;}) {
   const [isRecording, setRecording] = useState(false);
   const [media, setMedia] = useState<MediaRecorder>();
   const {id} = useParams()
@@ -51,7 +52,7 @@ export function VoiceRecorder({setMessages, stop}:any) {
         body: formData,
       }).then((data)=>data.json())
       .then((res)=>{
-        setMessages([
+        setMessages((prev:any)=> [...prev, ...[
           {
             role:"user",
             content:res.transcribed_text,
@@ -61,7 +62,7 @@ export function VoiceRecorder({setMessages, stop}:any) {
             content:res.response,
             audio_file:res.audio_url
           }
-        ])
+        ]])
       })
     }
 

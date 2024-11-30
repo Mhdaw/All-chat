@@ -313,7 +313,7 @@ export function MultimodalInput({
       >
         <PaperclipIcon size={14} />
       </Button>
-      <VoiceRecorder setMessages={setMessages} stop={stop} />
+      <VoiceRecorder setMessages={setMessages} />
     </div>
   );
 }
