@@ -1,15 +1,14 @@
-FROM node:18
+FROM node:14
 
 WORKDIR /app
 
 COPY package*.json ./
 
-# Install
 RUN npm install
 
 COPY . .
 
-# npm run build Or npm run dev?
-RUN npm run build
+EXPOSE 3000
 
-CMD ["npm", "start"] # ?
+# Run the app
+CMD ["npm", "start"]
