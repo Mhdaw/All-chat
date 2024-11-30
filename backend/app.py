@@ -191,7 +191,7 @@ class ChatService:
                 return f"Error executing function: {str(e)}"
         return "Error: Function not found"
 
-    def get_response(self, conversation_id, message, model=None, image_model=None, speech_model=None):
+    def get_response(self, conversation_id, message, model=None, image_model=None):# , speech_model=None
         """
         Get a response from the assistant based on the model type.
         """
@@ -220,7 +220,7 @@ class ChatService:
                     return error, None
 
                 response = get_custom_model_response(custom_model, tokenizer, message)
-                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER, model=speech_model)
+                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER)# , model=speech_model
             else:
                 # Use the default chat service for API models
                 messages = [{"role": "system", "content": system_prompt}] + [
@@ -259,7 +259,7 @@ class ChatService:
                             assistant_response = final_response.choices[0].message.content
 
                 response = assistant_response
-                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER, model=speech_model)
+                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER) # , model=speech_model
 
             conversations[conversation_id].append({
                 "role": "assistant",
@@ -346,8 +346,8 @@ def send_message():
         conversation_id = data.get('conversation_id')
         model = data.get('model')  # Selected model (e.g., "custom_model")
         image_model = data.get('image_model')
-        transcribe_model = data.get('transcribe_model')
-        speech_model = data.get('speech_model')
+        #transcribe_model = data.get('transcribe_model')
+        #speech_model = data.get('speech_model')
         if not message or not conversation_id:
             return jsonify({'error': 'Message and conversation_id are required'}), 400
 
@@ -357,7 +357,7 @@ def send_message():
         if model_type == "open_model" and not torch.cuda.is_available():
             return jsonify({'error': 'GPU is not available. Please try another model.'}), 400
 
-        text_response, audio_filename = chat_service.get_response(conversation_id, message, model, image_model, speech_model)
+        text_response, audio_filename = chat_service.get_response(conversation_id, message, model, image_model)#, speech_model
 
         chat_metadata[conversation_id]['timestamp'] = datetime.utcnow().isoformat()
         save_data(conversations, chat_metadata)
@@ -393,9 +393,9 @@ def upload_audio():
         audio = AudioSegment.from_file(temp_path, format="webm")
         audio.export(wav_path, format="wav")
         os.remove(temp_path)
-        data_t = request.json
-        transcribe_model = data_t.get('transcribe_model')
-        transcribed_text = transcribe_speech(wav_path, model_name=transcribe_model)
+        #data_t = request.json
+        #transcribe_model = data_t.get('transcribe_model')
+        transcribed_text = transcribe_speech(wav_path)# , model_name=transcribe_model
         
         if transcribed_text:
             # Add user message with audio
