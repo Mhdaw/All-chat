@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/sidebar';
 
 import { useReadLocalStorage } from 'usehooks-ts';
+import { ChartSplineIcon } from 'lucide-react';
 type Chat = {
     chat_id:string;
     timestamp:string;
@@ -101,7 +102,7 @@ export function SidebarHistory() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const router = useRouter();
   const handleDelete = async () => {
-    const deletePromise = fetch(`/api/chat?id=${deleteId}`, {
+    const deletePromise = fetch(`/delete_chat/${deleteId}`, {
       method: 'DELETE',
     });
 
@@ -177,6 +178,14 @@ export function SidebarHistory() {
   }
 
   const groupChatsByDate = (chats: Chat[]): GroupedChats => {
+    if (typeof window === 'undefined') return {
+      today: chats,
+      yesterday: [],
+      lastWeek: [],
+      lastMonth: [],
+      older: [],
+    } as GroupedChats;
+
     const now = new Date();
     const oneWeekAgo = subWeeks(now, 1);
     const oneMonthAgo = subMonths(now, 1);
@@ -233,6 +242,7 @@ export function SidebarHistory() {
                             onDelete={(chatId) => {
                               setDeleteId(chatId);
                               setShowDeleteDialog(true);
+                              
                             }}
                             setOpenMobile={setOpenMobile}
                           />

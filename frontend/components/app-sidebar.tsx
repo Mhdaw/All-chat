@@ -26,7 +26,7 @@ export function AppSidebar() {
   const router = useRouter();
   const localStorage = useReadLocalStorage("chats")|| []
   const { setOpenMobile } = useSidebar();
-  const [local, setLocal] = useLocalStorage("chats", [...localStorage]);
+  const [local, setLocal] = useLocalStorage("chats", [...(localStorage as [])]);
 
   
   

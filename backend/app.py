@@ -350,7 +350,7 @@ class ChatService:
             conversations[conversation_id].append({
                 "role": "assistant",
                 "content": response,
-                "audio_file": audio_filename
+                "audio_file": audio_filename if audio_filename else None
             })
             
             save_data(conversations, chat_metadata)
@@ -503,7 +503,7 @@ def upload_audio():
                 'user_audio_url': f'/audio/{user_audio_filename}'
             })
         else:
-            os.remove(user_audio_path)
+            os.remove(user_audio_filename)
             return jsonify({'error': 'Failed to transcribe audio'}), 500
             
     except Exception as e:
