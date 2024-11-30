@@ -1,13 +1,14 @@
 import { Mic, Pause } from "lucide-react";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
-import useConverter from "@/hooks/use-converter";
 import { MAIN_URL } from "@/lib/utils";
+import { useParams } from "next/navigation";
 
 
-export function VoiceRecorder() {
+export function VoiceRecorder({setMessages, stop}:any) {
   const [isRecording, setRecording] = useState(false);
   const [media, setMedia] = useState<MediaRecorder>();
+  const {id} = useParams()
 
   const onSuccess = (stream: MediaStream) => {
     console.log("succcessfull");
@@ -29,7 +30,7 @@ export function VoiceRecorder() {
 
     };
 
-    mediaRecorder.onstop =async () => {
+    mediaRecorder.onstop = () => {
       console.log("stopingmedia");
 
       setRecording(false)
@@ -39,37 +40,29 @@ export function VoiceRecorder() {
       const file = new File([blob], "voice", { type: "audio/webm" });
       const formData = new FormData();
       formData.append('audio', file, 'audio.webm');
-      formData.append("conversation_id", )
+      formData.append("conversation_id", `${id}`)
 
       const headers = {
         'Accept': 'application/json',  // Expected response type
       };
-
-      const data =await fetch(MAIN_URL+"/upload_audio", {
+      fetch(MAIN_URL+"/upload_audio", {
         method: 'POST',
         headers: headers, // Include headers if necessary
         body: formData,
-      });
-      console.log(await data.json())
-      
-
-      const audioURL = window.URL.createObjectURL(blob);
-      
-      const audio = new Audio(audioURL)
-      audio.play()
-      
-      console.log(file);
-      console.log(audio);
-      const link = document.createElement('a');
-      link.href = audioURL;
-      console.log(audioURL);
-
-      link.download = "voice.weba"; // Set the filename for the downloaded file
-      link.click();
-      chunks = [];
-
-
-
+      }).then((data)=>data.json())
+      .then((res)=>{
+        setMessages([
+          {
+            role:"user",
+            content:res.transcribed_text,
+            audio_file:res.user_audio_url
+          },{
+            role:"assistant",
+            content:res.response,
+            audio_file:res.audio_url
+          }
+        ])
+      })
     }
 
   }

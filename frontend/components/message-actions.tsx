@@ -28,12 +28,15 @@ export function MessageActions({
 }) {
   const [_, copyToClipboard] = useCopyToClipboard();
   const [audioState, setAudioState] = useState<"playing"|"paused"|"canplay"|"loading">("loading")
+  const audio = useRef<HTMLAudioElement>(null)
 
   if (isLoading) return null;
   if (message.role === 'user') return null;
-  const audio = useRef<HTMLAudioElement>(null)
+  
   useEffect(()=>{
-    audio!.current!.src = `${MAIN_URL}${message.audio_url|| `/audio/${message.audio_file}`}`
+    console.log(message);
+    
+    audio!.current!.src = `${MAIN_URL}/${message.audio_file|| `audio/${message.audio_url}`}`
     setAudioState("paused")
     audio!.current!.onpause =()=>{
       setAudioState("paused")
@@ -42,8 +45,8 @@ export function MessageActions({
   },[])
 
   const play =()=>{
-    console.log("playing");
-    
+    console.log(message);
+    console.log(audio!.current!.src)
     audio!.current!.play()
     setAudioState("playing")
   }

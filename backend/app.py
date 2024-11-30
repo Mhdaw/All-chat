@@ -11,6 +11,7 @@ import json
 import librosa
 from pydub import AudioSegment
 import io
+from sympy import re
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import diffusers 
@@ -27,8 +28,8 @@ logging.basicConfig(level=logging.DEBUG)
 # Store conversations in a file
 CONVERSATIONS_FILE = 'conversations.json'
 METADATA_FILE = 'chat_metadata.json'
-AUDIO_FOLDER = 'audio_files'
-IMAGE_FOLDER = 'image_files'
+AUDIO_FOLDER = 'audio'
+IMAGE_FOLDER = 'image'
 
 # Create audio folder if it doesn't exist
 if not os.path.exists(AUDIO_FOLDER):

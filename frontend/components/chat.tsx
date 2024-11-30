@@ -64,8 +64,8 @@ export function Chat({
       .then((data) => {
         console.log(data)
         const newMessage: Message = {
-          content: data.response,
-          audio_url: data.audio_url,
+          content: data.text,
+          audio_url: data.audio_file,
           role: "assistant"
         }
         setMessages((prev) => [...prev, newMessage])
