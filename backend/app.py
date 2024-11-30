@@ -354,7 +354,7 @@ class ChatService:
             })
             
             save_data(conversations, chat_metadata)
-            return response
+            return response, audio_filename
         except Exception as e:
             logging.error(f"Error in get_response: {e}")
             raise
