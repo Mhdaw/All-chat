@@ -7,17 +7,18 @@ from dotenv import load_dotenv
 import logging
 import uuid
 from datetime import datetime, timezone
+import yfinance as yf
 import json
 import librosa
 from pydub import AudioSegment
 import io
-from sympy import re
+import re
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-import diffusers 
+
 from speech2text import transcribe_speech
 from text2speech import generate_speech
-
+from text2image import generate_image_func
+from LocalModels import get_custom_model_response, load_custom_model_and_tokenizer
 load_dotenv()
 
 app = Flask(__name__)
@@ -94,107 +95,6 @@ Keep responses concise and natural,
 Your responses should be tailored to the user's level of knowledge and the context of their questions. Always strive to be a reliable source of information and assistance.
 """
 
-def load_custom_model_and_tokenizer(model_id, hf_token):
-    try:
-        # Check if a GPU is available
-        if not torch.cuda.is_available():
-            return None, None, "GPU is not available. Please try another model."
-
-        # Load the model and tokenizer with quantization
-        quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16
-        )
-        tokenizer = AutoTokenizer.from_pretrained(model_id, use_auth_token=hf_token)
-        model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            use_auth_token=hf_token,
-            quantization_config=quantization_config,
-            device_map="auto"
-        )
-        return model, tokenizer, None
-    except Exception as e:
-        logging.error(f"Error loading custom model: {e}")
-        return None, None, "Failed to load the custom model."
-
-# Define a function to get a response using the custom model
-def get_custom_model_response(model, tokenizer, prompt):
-    try:
-        input_ids = tokenizer(prompt, return_tensors="pt").to(model.device)
-        with torch.no_grad():
-            outputs = model.generate(**input_ids, max_new_tokens=256)
-        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return response
-    except Exception as e:
-        logging.error(f"Error generating response: {e}")
-        return "Error generating response with the custom model."
-
-def handle_image_generator(model_id):
-  if "stable-diffusion" in model_id:
-    generator_type = "stable-diffusion"
-  elif "FLUX" in model_id:
-    generator_type = "flux"
-  else:
-    raise ValueError(f"Unsupported model type: {model_id}")
-
-def load_stable_diffusion_generator(model_id):
-  pipe = diffusers.StableDiffusion3Pipeline.from_pretrained(model_id, torch_dtype=torch.float16)
-  pipe = pipe.to("cuda")
-  return pipe
-
-def load_flux_generator(model_id):
-  pipe = diffusers.FluxPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
-  pipe.enable_model_cpu_offload() 
-  pipe = pipe.to("cuda")
-  return pipe
-
-def load_image_generator(model_id):
-  generator_type = handle_image_generator(model_id)
-
-  if generator_type == "stable-diffusion":
-    return load_stable_diffusion_generator(model_id)
-  elif generator_type == "flux":
-    return load_flux_generator(model_id)
-
-def generate_image(prompt, model_id, IMAGE_FOLDER):
-  try:
-    if not torch.cuda.is_available():
-              return None, None, "GPU is not available. Please try another model."
-    generator_type = handle_image_generator(model_id)
-    image_id = str(uuid.uuid4())
-
-    if generator_type == "stable-diffusion":
-      pipe = load_stable_diffusion_generator(model_id)
-      image = pipe(
-          prompt,
-          num_inference_steps=28,
-          guidance_scale=3.5,
-      ).images[0]
-      
-      image.save(f"{image_id}.png")
-      image_path = os.path.join(IMAGE_FOLDER, f"{image_id}.png")
-      return image_path, image_id
-
-    elif generator_type == "flux":
-      pipe = load_flux_generator(model_id)
-      image = pipe(
-          prompt,
-          height=1024,
-          width=1024,
-          guidance_scale=3.5,
-          num_inference_steps=50,
-          max_sequence_length=512,
-          generator=torch.Generator("cpu").manual_seed(0)
-      ).images[0]
-      image_path = os.path.join(IMAGE_FOLDER, f"{image_id}.png")
-      image.save(f"{image_id}.png")
-      return image_path, image_id
-  except Exception as e:
-        logging.error(f"Error loading custom model: {e}")
-        return None, None, "Failed to load the image model."
-      
 
 API_MODELS  = ["Meta-Llama-3-1-8B-Instruct-FP8","Meta-Llama-3-1-405B-Instruct-FP8","Meta-Llama-3-2-3B-Instruct","nvidia-Llama-3-1-Nemotron-70B-Instruct-HF"]
 
@@ -249,10 +149,21 @@ class ChatService:
         except Exception as e:
             return {"error": f"Could not calculate: {str(e)}"}
 
-    def _generate_image(self, prompt: str) -> str:
+    def generate_image(self, prompt: str) -> dict:
+
       """Generate an image based on the given prompt."""
-      image_path, image_id = generate_image(prompt, self.image_model, IMAGE_FOLDER) #todo: handle model_id, IMAGE_FOLDER
-      return {"image_path": image_path, "image_id": image_id}
+      try:
+          # Assuming generate_image_func is a function that generates the image
+          # and returns the image path and image ID.
+          result = generate_image_func(prompt, self.image_model, IMAGE_FOLDER)
+
+          if result is None or len(result) != 2:
+              return {"error": "Could not generate image: " + result[2] if result and len(result) > 2 else "Unknown error"}
+
+          image_path, image_id = result
+          return {"image_path": image_path, "image_id": image_id}
+      except Exception as e:
+          return {"error": f"Could not generate image: {str(e)}"}
 
     def execute_function(self, function_text: str) -> str:
         """Execute a function based on the text command"""
@@ -269,7 +180,7 @@ class ChatService:
         function_mapping = {
             "get_stock_price": lambda p: self.get_stock_price(p[0]),
             "calculate": lambda p: self.calculate(p[0]),
-            "_generate_image": lambda p: self.generate_image(p[0])
+            "generate_image": lambda p: self.generate_image(p[0])
         }
         
         if function_name in function_mapping:
@@ -280,7 +191,7 @@ class ChatService:
                 return f"Error executing function: {str(e)}"
         return "Error: Function not found"
 
-    def get_response(self, conversation_id, message, model=None, image_model=None):
+    def get_response(self, conversation_id, message, model=None, image_model=None, speech_model=None):
         """
         Get a response from the assistant based on the model type.
         """
@@ -309,7 +220,7 @@ class ChatService:
                     return error, None
 
                 response = get_custom_model_response(custom_model, tokenizer, message)
-                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER)
+                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER, model=speech_model)
             else:
                 # Use the default chat service for API models
                 messages = [{"role": "system", "content": system_prompt}] + [
@@ -324,10 +235,12 @@ class ChatService:
                             # Split response into function call and rest of message
                             parts = assistant_response.split("\n", 1)
                             function_call = parts[0].strip()
+                            logging.info(f"function_call:{function_call}")
                             
                             # Execute function
                             function_result = self.execute_function(function_call)
-                            
+                            logging.info(f"function_result:{function_result}")
+
                             # Add function result to messages
                             messages.append({
                                 "role": "assistant",
@@ -346,7 +259,7 @@ class ChatService:
                             assistant_response = final_response.choices[0].message.content
 
                 response = assistant_response
-                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER)
+                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER, model=speech_model)
 
             conversations[conversation_id].append({
                 "role": "assistant",
@@ -433,6 +346,8 @@ def send_message():
         conversation_id = data.get('conversation_id')
         model = data.get('model')  # Selected model (e.g., "custom_model")
         image_model = data.get('image_model')
+        transcribe_model = data.get('transcribe_model')
+        speech_model = data.get('speech_model')
         if not message or not conversation_id:
             return jsonify({'error': 'Message and conversation_id are required'}), 400
 
@@ -442,7 +357,7 @@ def send_message():
         if model_type == "open_model" and not torch.cuda.is_available():
             return jsonify({'error': 'GPU is not available. Please try another model.'}), 400
 
-        text_response, audio_filename = chat_service.get_response(conversation_id, message, model, image_model)
+        text_response, audio_filename = chat_service.get_response(conversation_id, message, model, image_model, speech_model)
 
         chat_metadata[conversation_id]['timestamp'] = datetime.utcnow().isoformat()
         save_data(conversations, chat_metadata)
@@ -478,8 +393,9 @@ def upload_audio():
         audio = AudioSegment.from_file(temp_path, format="webm")
         audio.export(wav_path, format="wav")
         os.remove(temp_path)
-        
-        transcribed_text = transcribe_speech(wav_path)
+        data_t = request.json
+        transcribe_model = data_t.get('transcribe_model')
+        transcribed_text = transcribe_speech(wav_path, model_name=transcribe_model)
         
         if transcribed_text:
             # Add user message with audio
