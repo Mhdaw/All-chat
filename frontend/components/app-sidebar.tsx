@@ -24,7 +24,7 @@ import { ModelSelector } from './model-selector';
 
 export function AppSidebar() {
   const router = useRouter();
-  const localStorage = useReadLocalStorage("chats") as [];
+  const localStorage = useReadLocalStorage("chats")|| []
   const { setOpenMobile } = useSidebar();
   const [local, setLocal] = useLocalStorage("chats", [...localStorage]);
 

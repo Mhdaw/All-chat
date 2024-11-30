@@ -31,7 +31,8 @@ export function ModelSelector({
   );
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu
+    open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         asChild
         className={cn(
@@ -44,7 +45,7 @@ export function ModelSelector({
           <ChevronDownIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-[300px]">
+      <DropdownMenuContent align="start" className="min-w-[300px] max-h-[80vh] overflow-scroll">
         {models.map((model) => (
           <DropdownMenuItem
             key={model.id}
