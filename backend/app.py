@@ -14,10 +14,24 @@ from pydub import AudioSegment
 import io
 import re
 import torch
+from vllm import LLM
+from vllm.sampling_params import SamplingParams
+from langchain.document_loaders import GitHubIssuesLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import FAISS
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.llms import HuggingFacePipeline
+from langchain.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 
+from pixteral import load_pixtral_model
+from llamavision import get_model_response
 from speech2text import transcribe_speech
 from text2speech import generate_speech
 from text2image import generate_image_func
+from websearch import get_answer_from_tavily, fetch_url
+from Rag import load_model, load_github_issues, setup_retriever, create_llm_chain
 from LocalModels import get_custom_model_response, load_custom_model_and_tokenizer
 load_dotenv()
 
@@ -25,6 +39,8 @@ app = Flask(__name__)
 CORS(app)
 
 logging.basicConfig(level=logging.DEBUG)
+
+ACCESS_TOKEN = os.getenv("YOUR_GITHUB_PERSONAL_TOKEN")
 
 # Store conversations in a file
 CONVERSATIONS_FILE = 'conversations.json'
@@ -79,6 +95,17 @@ You are a helpful assistant designed to assist users with a wide range of querie
 
 3. generate_image(prompt: str): Generates an image based on the given prompt
    Example: FUNCTION_CALL: generate_image("A beautiful sunset over the ocean")
+
+4. get_web_result(query: str): performes a web search and return the answer to the query
+    Example: FUNCTION_CALL: get_web_result("What is machine learning")
+
+5. get_url(urls: str): fetchs the URL and extracts the urls content and return the URL that it fetched and the extracted content
+    Example 1: FUNCTION_CALL: get_web_result("https://en.wikipedia.org/wiki/Artificial_intelligence")
+    Example 2: FUNCTION_CALL: get_web_result( [
+    "https://en.wikipedia.org/wiki/Artificial_intelligence",
+    "https://en.wikipedia.org/wiki/Machine_learning",
+    "https://en.wikipedia.org/wiki/Data_science"])
+    Note: if you want to fetch more thatn 1 URL please put them in a list like above
    
 To use these functions, respond with FUNCTION_CALL: followed by the function name and parameters.
 Your primary goal is to provide accurate, clear, and concise information. 
@@ -165,6 +192,23 @@ class ChatService:
       except Exception as e:
           return {"error": f"Could not generate image: {str(e)}"}
 
+    def get_web_result(self, query):
+        try:
+
+            answer = get_answer_from_tavily(query)
+            logging.info(f"got answer from web for:{query}")
+            return {"web_result": answer}
+        except Exception as e:
+            return {"error": f"could not get web answer: {str(e)}"}
+        
+    def get_url(self, urls):
+        try:
+            url, content = fetch_url(urls)
+            logging.info(f"fetched for url:{urls}")
+            return {"web_url":url, "extracted_content":content}
+        except Exception as e:
+            return {"error": f"could not fetch url: {str(e)}"}
+
     def execute_function(self, function_text: str) -> str:
         """Execute a function based on the text command"""
         # Extract function name and parameters using regex
@@ -180,18 +224,25 @@ class ChatService:
         function_mapping = {
             "get_stock_price": lambda p: self.get_stock_price(p[0]),
             "calculate": lambda p: self.calculate(p[0]),
-            "generate_image": lambda p: self.generate_image(p[0])
+            "generate_image": lambda p: self.generate_image(p[0]),
+            "get_web_result": lambda p: self.get_web_result(p[0]),
+            "fetch_url": lambda p: self.get_url(p[0])
         }
         
         if function_name in function_mapping:
             try:
                 result = function_mapping[function_name](params)
+                logging.info(f"result generated for function{function_name}, result:{result}")
                 return json.dumps(result)
             except Exception as e:
                 return f"Error executing function: {str(e)}"
         return "Error: Function not found"
 
+<<<<<<< HEAD
     def get_response(self, conversation_id, message, model=None, image_model=None, speech_model="gtts"):
+=======
+    def get_response(self, conversation_id, message, model=None, image_model=None):# , speech_model=None
+>>>>>>> c5df9cdd794f4843125ab3e09b449e62c59a5774
         """
         Get a response from the assistant based on the model type.
         """
@@ -222,10 +273,14 @@ class ChatService:
                     return error, None
 
                 response = get_custom_model_response(custom_model, tokenizer, message)
+<<<<<<< HEAD
                 audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER, model=speech_model)
                 print(audio_filename)
                 print(response)
                 print(2345678)
+=======
+                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER)# , model=speech_model
+>>>>>>> c5df9cdd794f4843125ab3e09b449e62c59a5774
             else:
                 # Use the default chat service for API models
                 messages = [{"role": "system", "content": system_prompt}] + [
@@ -264,10 +319,14 @@ class ChatService:
                             assistant_response = final_response.choices[0].message.content
 
                 response = assistant_response
+<<<<<<< HEAD
                 audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER, model=speech_model)
                 print(audio_filename)
                 print(response)
                 print(9999999999)
+=======
+                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER) # , model=speech_model
+>>>>>>> c5df9cdd794f4843125ab3e09b449e62c59a5774
 
             conversations[conversation_id].append({
                 "role": "assistant",
@@ -357,8 +416,8 @@ def send_message():
         conversation_id = data.get('conversation_id')
         model = data.get('model')  # Selected model (e.g., "custom_model")
         image_model = data.get('image_model')
-        transcribe_model = data.get('transcribe_model')
-        speech_model = data.get('speech_model')
+        #transcribe_model = data.get('transcribe_model')
+        #speech_model = data.get('speech_model')
         if not message or not conversation_id:
             return jsonify({'error': 'Message and conversation_id are required'}), 400
 
@@ -368,7 +427,7 @@ def send_message():
         if model_type == "open_model" and not torch.cuda.is_available():
             return jsonify({'error': 'GPU is not available. Please try another model.'}), 400
 
-        text_response, audio_filename = chat_service.get_response(conversation_id, message, model, image_model, speech_model)
+        text_response, audio_filename = chat_service.get_response(conversation_id, message, model, image_model)#, speech_model
 
         chat_metadata[conversation_id]['timestamp'] = datetime.utcnow().isoformat()
         save_data(conversations, chat_metadata)
@@ -404,8 +463,14 @@ def upload_audio():
         audio = AudioSegment.from_file(temp_path, format="webm")
         audio.export(wav_path, format="wav")
         os.remove(temp_path)
+<<<<<<< HEAD
         transcribed_text = transcribe_speech(wav_path, model_name="openai/whisper-tiny")
         print(transcribed_text)
+=======
+        #data_t = request.json
+        #transcribe_model = data_t.get('transcribe_model')
+        transcribed_text = transcribe_speech(wav_path)# , model_name=transcribe_model
+>>>>>>> c5df9cdd794f4843125ab3e09b449e62c59a5774
         
         if transcribed_text:
             # Add user message with audio
@@ -470,6 +535,89 @@ def clear_history(conversation_id):
         conversations[conversation_id] = []
         save_data(conversations, chat_metadata)
     return jsonify({'status': 'success'})
+
+@app.route("/pixtral/generate", methods=["POST"])
+def pixtral_generate():
+    """API endpoint for generating a response."""
+    global llm
+    sampling_params = SamplingParams(max_tokens=8192)
+
+    if llm is None:
+        load_pixtral_model()
+        if llm is None:
+            return jsonify({"error": "GPU is not available or model loading failed. Pixtral model requires a GPU."}), 500
+
+    data = request.json
+    prompt = data.get("prompt")
+    image_url = data.get("image_url")
+
+    if not prompt or not image_url:
+        return jsonify({"error": "Both 'prompt' and 'image_url' are required."}), 400
+
+    try:
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": image_url}}
+                ]
+            },
+        ]
+
+        outputs = llm.chat(messages, sampling_params=sampling_params)
+        response = outputs[0].outputs[0].text
+        return jsonify({"response": response})
+    except Exception as e:
+        logging.error(f"Error generating Pixtral response: {e}")
+        return jsonify({"error": "Failed to generate the Pixtral response."}), 500
+    
+
+
+# Flask route to generate response
+@app.route('/rag/generate', methods=['POST'])
+def rag_generate_response():
+    data = request.json
+    question = data.get("question")
+    repo = data.get("repo", "huggingface/peft")
+    rag_model_id = data.get("repo", "huggingface/peft")
+    embedding_model_id = data.get("repo", "huggingface/peft")
+
+    # Load GitHub issues
+    try:
+        chunked_docs = load_github_issues(repo, ACCESS_TOKEN)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    # Setup retriever
+    retriever = setup_retriever(chunked_docs, model=embedding_model_id)
+
+    # Create LLM chain
+    model, tokenizer = load_model(model=rag_model_id)
+    llm_chain = create_llm_chain(model, tokenizer)
+
+    rag_chain = {"context": retriever, "question": RunnablePassthrough()} | llm_chain
+
+    # Get response
+    try:
+        response = rag_chain.invoke(question)
+        return jsonify({"response": response.strip()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/llamavision/generate", methods=["POST"])
+def llamavision_generate():
+    """API endpoint for generating a response."""
+    data = request.json
+    image_url = data.get("image_url")
+    prompt = data.get("prompt")
+
+    if not image_url or not prompt:
+        return jsonify({"error": "Both 'image_url' and 'prompt' are required."}), 400
+
+    response = get_model_response(image_url, prompt)
+    return jsonify({"response": response})
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)

@@ -8,7 +8,7 @@ from pydub import AudioSegment
 
 language = "en"
 
-def generate_speech(text, language, AUDIO_FOLDER, model):
+def generate_speech(text, language, AUDIO_FOLDER, model="gtts"):
     if model == "gtts":
         """Generate speech from text and return the filename"""
         try:

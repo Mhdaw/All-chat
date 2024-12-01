@@ -14,15 +14,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const MAIN_URL="https://effective-acorn-p6jqqxqjp46frwr6-8080.app.github.dev"
-//"https://4k20j2qo5lepbajk0dkglrg0hg.ingress.akashprovid.com"
-// https://4k20j2qo5lepbajk0dkglrg0hg.ingress.akashprovid.com/
+export const MAIN_URL="http://provider.akashprovid.com:32718"
+>>>>>>> c5df9cdd794f4843125ab3e09b449e62c59a5774
 
 interface ApplicationError extends Error {
   info: string;
   status: number;
 }
-
+// not in use
 export const fetcher = async (url: string) => {
   const res = await fetch(`${MAIN_URL}/send_message`, {
     method: 'POST',
