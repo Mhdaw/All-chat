@@ -2,6 +2,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from transformers import BitsAndBytesConfig
 import torch
 import logging
+import os
 
 # Globals for the model and tokenizer
 model = None
