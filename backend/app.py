@@ -14,11 +14,24 @@ from pydub import AudioSegment
 import io
 import re
 import torch
+from vllm import LLM
+from vllm.sampling_params import SamplingParams
+from langchain.document_loaders import GitHubIssuesLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import FAISS
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.llms import HuggingFacePipeline
+from langchain.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 
+from pixteral import load_pixtral_model
+from llamavision import get_model_response
 from speech2text import transcribe_speech
 from text2speech import generate_speech
 from text2image import generate_image_func
 from websearch import get_answer_from_tavily, fetch_url
+from Rag import load_model, load_github_issues, setup_retriever, create_llm_chain
 from LocalModels import get_custom_model_response, load_custom_model_and_tokenizer
 load_dotenv()
 
@@ -26,6 +39,8 @@ app = Flask(__name__)
 CORS(app)
 
 logging.basicConfig(level=logging.DEBUG)
+
+ACCESS_TOKEN = os.getenv("YOUR_GITHUB_PERSONAL_TOKEN")
 
 # Store conversations in a file
 CONVERSATIONS_FILE = 'conversations.json'
@@ -492,6 +507,89 @@ def clear_history(conversation_id):
         conversations[conversation_id] = []
         save_data(conversations, chat_metadata)
     return jsonify({'status': 'success'})
+
+@app.route("/pixtral/generate", methods=["POST"])
+def pixtral_generate():
+    """API endpoint for generating a response."""
+    global llm
+    sampling_params = SamplingParams(max_tokens=8192)
+
+    if llm is None:
+        load_pixtral_model()
+        if llm is None:
+            return jsonify({"error": "GPU is not available or model loading failed. Pixtral model requires a GPU."}), 500
+
+    data = request.json
+    prompt = data.get("prompt")
+    image_url = data.get("image_url")
+
+    if not prompt or not image_url:
+        return jsonify({"error": "Both 'prompt' and 'image_url' are required."}), 400
+
+    try:
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": image_url}}
+                ]
+            },
+        ]
+
+        outputs = llm.chat(messages, sampling_params=sampling_params)
+        response = outputs[0].outputs[0].text
+        return jsonify({"response": response})
+    except Exception as e:
+        logging.error(f"Error generating Pixtral response: {e}")
+        return jsonify({"error": "Failed to generate the Pixtral response."}), 500
+    
+
+
+# Flask route to generate response
+@app.route('/rag/generate', methods=['POST'])
+def rag_generate_response():
+    data = request.json
+    question = data.get("question")
+    repo = data.get("repo", "huggingface/peft")
+    rag_model_id = data.get("repo", "huggingface/peft")
+    embedding_model_id = data.get("repo", "huggingface/peft")
+
+    # Load GitHub issues
+    try:
+        chunked_docs = load_github_issues(repo, ACCESS_TOKEN)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    # Setup retriever
+    retriever = setup_retriever(chunked_docs, model=embedding_model_id)
+
+    # Create LLM chain
+    model, tokenizer = load_model(model=rag_model_id)
+    llm_chain = create_llm_chain(model, tokenizer)
+
+    rag_chain = {"context": retriever, "question": RunnablePassthrough()} | llm_chain
+
+    # Get response
+    try:
+        response = rag_chain.invoke(question)
+        return jsonify({"response": response.strip()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/llamavision/generate", methods=["POST"])
+def llamavision_generate():
+    """API endpoint for generating a response."""
+    data = request.json
+    image_url = data.get("image_url")
+    prompt = data.get("prompt")
+
+    if not image_url or not prompt:
+        return jsonify({"error": "Both 'image_url' and 'prompt' are required."}), 400
+
+    response = get_model_response(image_url, prompt)
+    return jsonify({"response": response})
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)
