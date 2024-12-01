@@ -26,7 +26,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
 from MarcoO1 import load_marcoO1_model, marcoO1_generate_response
-from pixteral import load_pixtral_model
+from pixtral import load_pixtral_model
 from llamavision import get_model_response
 from speech2text import transcribe_speech
 from text2speech import generate_speech
