@@ -14,5 +14,6 @@ yfinance
 tavily-python
 vllm
 langchain
+langchain-community
 langchain_core
 Triton 
