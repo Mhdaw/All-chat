@@ -1,43 +1,45 @@
 import requests
 import torch
 from PIL import Image
-import logging
 from transformers import MllamaForConditionalGeneration, AutoProcessor
+import logging
 
-# Global variables for the model and processor
+# Globals for model and processor
 vision_model = None
 vision_processor = None
 
 def load_vision_model_and_tokenizer():
+    """Loads the vision model and processor."""
+    global vision_model, vision_processor
     try:
         if not torch.cuda.is_available():
-            logging.warning("GPU is not available. The model will not be loaded.")
-            return None, None, "GPU is not available. Please try another service. Llama-3.2-11B-Vision model only works with GPU device."
-        logging.info("GPU is available. Loading the model...")
-        model = MllamaForConditionalGeneration.from_pretrained(
+            return None, None, "GPU is not available. Llama-3.2-11B-Vision model requires a GPU."
+
+        vision_model = MllamaForConditionalGeneration.from_pretrained(
             "meta-llama/Llama-3.2-11B-Vision-Instruct",
             torch_dtype=torch.bfloat16,
             device_map="auto",
         )
-        processor = AutoProcessor.from_pretrained("meta-llama/Llama-3.2-11B-Vision-Instruct")
-        logging.info("Llama-3.2-11B-Vision model loaded successfully.")
-        return model, processor, None
+        vision_processor = AutoProcessor.from_pretrained("meta-llama/Llama-3.2-11B-Vision-Instruct")
+        logging.info("Vision model and processor loaded successfully.")
     except Exception as e:
         logging.error(f"Error loading vision model and tokenizer: {e}")
         return None, None, str(e)
 
-def get_model_response(image_url, prompt, model_id="meta-llama/Llama-3.2-11B-Vision-Instruct"):
+def get_model_response(image_url, prompt):
     """Generates a response from the model based on an image and prompt."""
-    global vision_model, vision_processor
-
     try:
-        if vision_model is None or vision_processor is None:
-            vision_model, vision_processor, error_message = load_vision_model_and_tokenizer()
-            if error_message:
-                return None, None, error_message
+        global vision_model, vision_processor
 
+        if vision_model is None or vision_processor is None:
+            load_vision_model_and_tokenizer()
+            if vision_model is None or vision_processor is None:
+                return "Model or processor loading failed."
+
+        # Load image
         image = Image.open(requests.get(image_url, stream=True).raw)
 
+        # Prepare input messages
         messages = [
             {"role": "user", "content": [
                 {"type": "image"},
@@ -45,6 +47,8 @@ def get_model_response(image_url, prompt, model_id="meta-llama/Llama-3.2-11B-Vis
             ]}
         ]
         input_text = vision_processor.apply_chat_template(messages, add_generation_prompt=True)
+
+        # Process inputs
         inputs = vision_processor(
             image,
             input_text,
@@ -52,14 +56,10 @@ def get_model_response(image_url, prompt, model_id="meta-llama/Llama-3.2-11B-Vis
             return_tensors="pt"
         ).to(vision_model.device)
 
+        # Generate response
         output = vision_model.generate(**inputs, max_new_tokens=30)
         response = vision_processor.decode(output[0], skip_special_tokens=True)
-        return response, None, None
+        return response
     except Exception as e:
         logging.error(f"Error generating model response: {e}")
-        return None, None, str(e)
-
-# usage
-#vision_model, vision_processor, error_message = load_vision_model_and_tokenizer()
-#if error_message:
-#    logging.error(error_message)
+        return str(e)
