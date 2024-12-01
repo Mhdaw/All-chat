@@ -3,9 +3,6 @@ from transformers import BitsAndBytesConfig
 import torch
 import logging
 
-# Flask app setup
-app = Flask(__name__)
-
 # Globals for the model and tokenizer
 model = None
 tokenizer = None
@@ -18,7 +15,7 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_compute_dtype="float16"  # Specify computation dtype (e.g., 'float16')
 )
 
-def load_model():
+def load_marcoO1_model():
     """Load the model and tokenizer."""
     global model, tokenizer
     try:
@@ -32,7 +29,7 @@ def load_model():
     except Exception as e:
         logging.error(f"Error loading model: {e}")
 
-def generate_response(model, tokenizer, input_ids, attention_mask, max_new_tokens=4096):
+def marcoO1_generate_response(model, tokenizer, input_ids, attention_mask, max_new_tokens=4096):
     """Generates a response using the model."""
     generated_ids = input_ids
     with torch.inference_mode():
