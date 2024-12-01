@@ -7,7 +7,8 @@ werkzeug==2.3.7
 torch
 transformers
 bitsandbytes
-diffusers 
+diffusers
+sentence-transformers 
 librosa
 pydub
 gtts
