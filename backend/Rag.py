@@ -13,7 +13,7 @@ import logging
 
 # Environment variables
 ACCESS_TOKEN = os.getenv("YOUR_GITHUB_PERSONAL_TOKEN")
-
+hf_token = os.getenv("HF_token")
 # Load model function
 def load_model(model="HuggingFaceH4/zephyr-7b-beta"):
     try:
@@ -24,8 +24,8 @@ def load_model(model="HuggingFaceH4/zephyr-7b-beta"):
             load_in_4bit=True, bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16
         )
-        model = AutoModelForCausalLM.from_pretrained(model_name, quantization_config=bnb_config)
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(model_name, quantization_config=bnb_config,use_auth_token=hf_token)
+        tokenizer = AutoTokenizer.from_pretrained(model_name,use_auth_token=hf_token)
         return model, tokenizer
     except Exception as e:
         logging.error(f"Error loading RAG model: {e}")
