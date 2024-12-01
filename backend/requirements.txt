@@ -13,3 +13,5 @@ gtts
 yfinance
 tavily-python
 vllm
+langchain
+langchain_core
