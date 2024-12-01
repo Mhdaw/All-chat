@@ -14,8 +14,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const MAIN_URL="http://provider.akashprovid.com:32718"
->>>>>>> c5df9cdd794f4843125ab3e09b449e62c59a5774
+export const MAIN_URL=process.env.NEXT_PUBLIC_MAIN_URL
 
 interface ApplicationError extends Error {
   info: string;
