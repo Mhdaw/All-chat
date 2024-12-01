@@ -18,6 +18,7 @@ import torch
 from speech2text import transcribe_speech
 from text2speech import generate_speech
 from text2image import generate_image_func
+from websearch import get_answer_from_tavily, fetch_url
 from LocalModels import get_custom_model_response, load_custom_model_and_tokenizer
 load_dotenv()
 
@@ -79,6 +80,17 @@ You are a helpful assistant designed to assist users with a wide range of querie
 
 3. generate_image(prompt: str): Generates an image based on the given prompt
    Example: FUNCTION_CALL: generate_image("A beautiful sunset over the ocean")
+
+4. get_web_result(query: str): performes a web search and return the answer to the query
+    Example: FUNCTION_CALL: get_web_result("What is machine learning")
+
+5. get_url(urls: str): fetchs the URL and extracts the urls content and return the URL that it fetched and the extracted content
+    Example 1: FUNCTION_CALL: get_web_result("https://en.wikipedia.org/wiki/Artificial_intelligence")
+    Example 2: FUNCTION_CALL: get_web_result( [
+    "https://en.wikipedia.org/wiki/Artificial_intelligence",
+    "https://en.wikipedia.org/wiki/Machine_learning",
+    "https://en.wikipedia.org/wiki/Data_science"])
+    Note: if you want to fetch more thatn 1 URL please put them in a list like above
    
 To use these functions, respond with FUNCTION_CALL: followed by the function name and parameters.
 Your primary goal is to provide accurate, clear, and concise information. 
@@ -165,6 +177,23 @@ class ChatService:
       except Exception as e:
           return {"error": f"Could not generate image: {str(e)}"}
 
+    def get_web_result(self, query):
+        try:
+
+            answer = get_answer_from_tavily(query)
+            logging.info(f"got answer from web for:{query}")
+            return {"web_result": answer}
+        except Exception as e:
+            return {"error": f"could not get web answer: {str(e)}"}
+        
+    def get_url(self, urls):
+        try:
+            url, content = fetch_url(urls)
+            logging.info(f"fetched for url:{urls}")
+            return {"web_url":url, "extracted_content":content}
+        except Exception as e:
+            return {"error": f"could not fetch url: {str(e)}"}
+
     def execute_function(self, function_text: str) -> str:
         """Execute a function based on the text command"""
         # Extract function name and parameters using regex
@@ -180,12 +209,15 @@ class ChatService:
         function_mapping = {
             "get_stock_price": lambda p: self.get_stock_price(p[0]),
             "calculate": lambda p: self.calculate(p[0]),
-            "generate_image": lambda p: self.generate_image(p[0])
+            "generate_image": lambda p: self.generate_image(p[0]),
+            "get_web_result": lambda p: self.get_web_result(p[0]),
+            "fetch_url": lambda p: self.get_url(p[0])
         }
         
         if function_name in function_mapping:
             try:
                 result = function_mapping[function_name](params)
+                logging.info(f"result generated for function{function_name}, result:{result}")
                 return json.dumps(result)
             except Exception as e:
                 return f"Error executing function: {str(e)}"
