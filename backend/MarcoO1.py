@@ -6,7 +6,7 @@ import logging
 # Globals for the model and tokenizer
 model = None
 tokenizer = None
-
+hf_token = os.getenv("HF_token")
 # Quantization configuration
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,  # Enable 4-bit quantization
@@ -19,10 +19,11 @@ def load_marcoO1_model():
     """Load the model and tokenizer."""
     global model, tokenizer
     try:
-        tokenizer = AutoTokenizer.from_pretrained("AIDC-AI/Marco-o1")
+        tokenizer = AutoTokenizer.from_pretrained("AIDC-AI/Marco-o1",use_auth_token=hf_token)
         model = AutoModelForCausalLM.from_pretrained(
             "AIDC-AI/Marco-o1",
             quantization_config=bnb_config,
+            use_auth_token=hf_token,
             device_map="auto"
         )
         logging.info("Model and tokenizer loaded successfully.")
