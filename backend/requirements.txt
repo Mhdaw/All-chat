@@ -12,3 +12,4 @@ pydub
 gtts
 yfinance
 tavily-python
+vllm
