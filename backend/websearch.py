@@ -2,7 +2,9 @@ import os
 from tavily import TavilyClient
 import logging
 
-tavily_client = TavilyClient(api_key=os.getenv("TAVILY_API"))
+api = "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" or os.getenv("TAVILY_API_KEY")
+print(f"api:{api}")
+tavily_client = TavilyClient(api_key=api)
 
 
 def get_answer_from_tavily(query):
