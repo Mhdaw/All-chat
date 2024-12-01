@@ -228,9 +228,9 @@ export function SidebarHistory() {
                 const groupedChats = groupChatsByDate(history);
 
                 return (
-                  <>
+                  <li>
                     {groupedChats.today.length > 0 && (
-                      <>
+                      <li>
                         <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
                           Today
                         </div>
@@ -247,11 +247,11 @@ export function SidebarHistory() {
                             setOpenMobile={setOpenMobile}
                           />
                         ))}
-                      </>
+                      </li>
                     )}
 
                     {groupedChats.yesterday.length > 0 && (
-                      <>
+                      <li>
                         <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
                           Yesterday
                         </div>
@@ -267,11 +267,11 @@ export function SidebarHistory() {
                             setOpenMobile={setOpenMobile}
                           />
                         ))}
-                      </>
+                      </li>
                     )}
 
                     {groupedChats.lastWeek.length > 0 && (
-                      <>
+                      <li>
                         <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
                           Last 7 days
                         </div>
@@ -287,11 +287,11 @@ export function SidebarHistory() {
                             setOpenMobile={setOpenMobile}
                           />
                         ))}
-                      </>
+                      </li>
                     )}
 
                     {groupedChats.lastMonth.length > 0 && (
-                      <>
+                      <li>
                         <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
                           Last 30 days
                         </div>
@@ -307,11 +307,11 @@ export function SidebarHistory() {
                             setOpenMobile={setOpenMobile}
                           />
                         ))}
-                      </>
+                      </li>
                     )}
 
                     {groupedChats.older.length > 0 && (
-                      <>
+                      <li>
                         <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
                           Older
                         </div>
@@ -327,9 +327,9 @@ export function SidebarHistory() {
                             setOpenMobile={setOpenMobile}
                           />
                         ))}
-                      </>
+                      </li>
                     )}
-                  </>
+                  </li>
                 );
               })()}
           </SidebarMenu>

@@ -1,7 +1,7 @@
 'use client';
 
 
-import { useState, useLayoutEffect ,createContext} from 'react';
+import { useState, useLayoutEffect ,createContext, useEffect} from 'react';
 import useSWR from 'swr';
 import { ChatHeader } from '@/components/chat-header';
 import { PreviewMessage, ThinkingMessage,PreviewImage } from '@/components/message';
@@ -74,6 +74,7 @@ export function Chat({
       })
       .catch((e) => {
         toast.error("failed to get ai data");
+        setLoading(false)
       })
 
   }
@@ -84,26 +85,33 @@ export function Chat({
   const stop = () => {
     setLoading(false)
   }
+  const [messagesContainerRef, messagesEndRef] =
+  useScrollToBottom<HTMLDivElement>();
+  const [imgContainerRef, imgEndRef] =
+  useScrollToBottom<HTMLDivElement>();
 
   const { data: votes } = useSWR<Array<Vote>>(
     ``,
     fetcher,
   );
+  // to solve hydration problem
+  const [isMounted, setIsMounted] = useState(false);
 
-
-  useLayoutEffect(() => {
+  useEffect(() => {
+    setIsMounted(true);
     fetch(`${MAIN_URL}/get_history/${chatId}`)
       .then(response => response.json())
       .then((data) => {
         console.log(data);
         setMessages((prev) => [...prev, ...data.history])
+      }).catch((e)=>{
+        console.log("error",e);
+        
       })
-  }, [chatId])
+  }, []);
 
-  const [messagesContainerRef, messagesEndRef] =
-    useScrollToBottom<HTMLDivElement>();
-    const [imgContainerRef, imgEndRef] =
-    useScrollToBottom<HTMLDivElement>();
+
+
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
 

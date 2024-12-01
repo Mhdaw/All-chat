@@ -191,12 +191,14 @@ class ChatService:
                 return f"Error executing function: {str(e)}"
         return "Error: Function not found"
 
-    def get_response(self, conversation_id, message, model=None, image_model=None, speech_model=None):
+    def get_response(self, conversation_id, message, model=None, image_model=None, speech_model="gtts"):
         """
         Get a response from the assistant based on the model type.
         """
         try:
             self.image_model = image_model
+            response = ""
+            audio_filename=""
             # Determine model type
             model_type = determine_model_type(model or "Meta-Llama-3-1-8B-Instruct-FP8")
             
@@ -221,6 +223,9 @@ class ChatService:
 
                 response = get_custom_model_response(custom_model, tokenizer, message)
                 audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER, model=speech_model)
+                print(audio_filename)
+                print(response)
+                print(2345678)
             else:
                 # Use the default chat service for API models
                 messages = [{"role": "system", "content": system_prompt}] + [
@@ -260,6 +265,9 @@ class ChatService:
 
                 response = assistant_response
                 audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER, model=speech_model)
+                print(audio_filename)
+                print(response)
+                print(9999999999)
 
             conversations[conversation_id].append({
                 "role": "assistant",
@@ -268,6 +276,9 @@ class ChatService:
             })
             
             save_data(conversations, chat_metadata)
+            print(audio_filename)
+            print(response)
+            print(363736373737373)
             return response, audio_filename
         except Exception as e:
             logging.error(f"Error in get_response: {e}")
@@ -393,9 +404,8 @@ def upload_audio():
         audio = AudioSegment.from_file(temp_path, format="webm")
         audio.export(wav_path, format="wav")
         os.remove(temp_path)
-        data_t = request.json
-        transcribe_model = data_t.get('transcribe_model')
-        transcribed_text = transcribe_speech(wav_path, model_name=transcribe_model)
+        transcribed_text = transcribe_speech(wav_path, model_name="openai/whisper-tiny")
+        print(transcribed_text)
         
         if transcribed_text:
             # Add user message with audio
