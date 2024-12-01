@@ -1,5 +1,5 @@
 # All-Chat
-## the worlds first(probably) AI platform
+## the worlds first(probably) AI platform running on decentralized cloud
 
 ### Introducing All-Chat:
 All-chat is a platfor where users can intract with LLMs as agents with abblities like image generation and web search with APIs
