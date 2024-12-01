@@ -3,11 +3,12 @@ import torch
 from PIL import Image
 from transformers import MllamaForConditionalGeneration, AutoProcessor
 import logging
+import os
 
 # Globals for model and processor
 vision_model = None
 vision_processor = None
-
+hf_token = os.getenv("HF_token")
 def load_vision_model_and_tokenizer():
     """Loads the vision model and processor."""
     global vision_model, vision_processor
