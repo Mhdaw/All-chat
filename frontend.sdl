@@ -1,0 +1,39 @@
+---
+version: "2.0"
+services:
+  allchatcpu:
+    image: mhdaw/allchatfrontend1
+    expose:
+      - port: 3000
+        as: 80
+        to:
+          - global: true
+    env:
+      - NEXT_PUBLIC_MAIN_URL=
+      - NEXT_PUBLIC_FIREBASE_API_KEY=
+      - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+      - NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+      - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+      - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+      - NEXT_PUBLIC_FIREBASE_APP_ID=
+profiles:
+  compute:
+    allchatcpu:
+      resources:
+        cpu:
+          units: 2
+        memory:
+          size: 8Gi
+        storage:
+          - size: 20Gi
+  placement:
+    dcloud:
+      pricing:
+        allchatcpu:
+          denom: uakt
+          amount: 10000
+deployment:
+  allchatcpu:
+    dcloud:
+      profile: allchatcpu
+      count: 1
