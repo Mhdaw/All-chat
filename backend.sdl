@@ -1,0 +1,43 @@
+---
+version: "2.0"
+services:
+  allchatgpu:
+    image: mhdaw/allchatbackend1
+    expose:
+      - port: 8080
+        as: 80
+        to:
+          - global: true
+    env:
+      - API_KEY=
+      - BASE_URL=
+      - HF_token=
+      - TAVILY_API_KEY=
+      - >-
+        YOUR_GITHUB_PERSONAL_TOKEN=
+profiles:
+  compute:
+    allchatgpu:
+      resources:
+        cpu:
+          units: 4
+        memory:
+          size: 16Gi
+        storage:
+          - size: 200Gi
+        gpu:
+          units: 2
+          attributes:
+            vendor:
+              nvidia: 
+  placement:
+    dcloud:
+      pricing:
+        allchatgpu:
+          denom: uakt
+          amount: 10000
+deployment:
+  allchatgpu:
+    dcloud:
+      profile: allchatgpu
+      count: 1
