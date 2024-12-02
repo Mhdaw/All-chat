@@ -9,12 +9,45 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 import type { Message as DBMessage, Document } from '@/lib/db/schema';
+import { storage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { nanoid } from "nanoid";
+
+export const uploadFile = async (file:File, folder:string) => {
+  try {
+    const filename = nanoid();
+    const storageRef = ref(
+      storage,
+      `${folder}${filename}.${file.name.split(".").pop()}`
+    );
+    const res = await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef)
+    return {
+        url:url,
+        pathname: res.metadata.name,
+        contentType: res.metadata.contentType,
+      
+    };
+  } catch (error) {
+    return {error}
+  }
+};
+
+export const getFile = async (path:string) => {
+  try {
+    const fileRef = ref(storage, path);
+    return getDownloadURL(fileRef);
+  } catch (error) {
+    throw error;
+  }
+};
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const MAIN_URL=process.env.NEXT_PUBLIC_MAIN_URL
+
+export const MAIN_URL=process.env.NEXT_PUBLIC_MAIN_URL // https://effective-acorn-p6jqqxqjp46frwr6-8080.app.github.dev/
 
 interface ApplicationError extends Error {
   info: string;

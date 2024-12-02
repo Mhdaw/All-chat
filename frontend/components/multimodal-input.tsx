@@ -16,7 +16,7 @@ import {
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
-import { sanitizeUIMessages } from '@/lib/utils';
+import { sanitizeUIMessages, uploadFile as uploadToFirebase } from '@/lib/utils';
 import { Message } from '@/lib/types';
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
@@ -140,23 +140,21 @@ export function MultimodalInput({
     formData.append('file', file);
 
     try {
-      const response = await fetch('/api/files/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await uploadToFirebase(file, "llama")
 
-      if (response.ok) {
-        const data = await response.json();
-        const { url, pathname, contentType } = data;
-
+      if (response.url) {
+        
+        const { url, pathname, contentType } = response;
+        console.log(url);
+        
         return {
           url,
           name: pathname,
           contentType: contentType,
         };
       }
-      const { error } = await response.json();
-      toast.error(error);
+      const { error } =  response
+      toast.error(error as string);
     } catch (error) {
       toast.error('Failed to upload file, please try again!');
     }

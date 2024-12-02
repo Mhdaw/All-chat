@@ -7,7 +7,7 @@ import { ChatHeader } from '@/components/chat-header';
 import { PreviewMessage, ThinkingMessage,PreviewImage } from '@/components/message';
 import { useScrollToBottom } from '@/components/use-scroll-to-bottom';
 import type { Vote } from '@/lib/db/schema';
-import { fetcher, generateUUID } from '@/lib/utils';
+import { fetcher, generateUUID, uploadFile } from '@/lib/utils';
 import { Message, ImageMessage } from '@/lib/types';
 import { MultimodalInput } from './multimodal-input';
 import { Overview, ImageOverview } from './overview';
@@ -77,6 +77,21 @@ export function Chat({
         setLoading(false)
       })
 
+  }
+
+  const submitAttachMentImg = async()=>{
+  
+    fetch(`${MAIN_URL}/send_message`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: input,
+        conversation_id: chatId,
+        model:model.apiidentifier,
+      })
+    })
   }
 
   const append = async (message: Message): Promise<string | null | undefined> => {

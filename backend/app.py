@@ -25,7 +25,7 @@ from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
-from pixteral import load_pixtral_model
+from pixtral import load_pixtral_model
 from llamavision import get_model_response
 from speech2text import transcribe_speech
 from text2speech import generate_speech
@@ -238,11 +238,7 @@ class ChatService:
                 return f"Error executing function: {str(e)}"
         return "Error: Function not found"
 
-<<<<<<< HEAD
-    def get_response(self, conversation_id, message, model=None, image_model=None, speech_model="gtts"):
-=======
     def get_response(self, conversation_id, message, model=None, image_model=None):# , speech_model=None
->>>>>>> c5df9cdd794f4843125ab3e09b449e62c59a5774
         """
         Get a response from the assistant based on the model type.
         """
@@ -273,14 +269,7 @@ class ChatService:
                     return error, None
 
                 response = get_custom_model_response(custom_model, tokenizer, message)
-<<<<<<< HEAD
-                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER, model=speech_model)
-                print(audio_filename)
-                print(response)
-                print(2345678)
-=======
                 audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER)# , model=speech_model
->>>>>>> c5df9cdd794f4843125ab3e09b449e62c59a5774
             else:
                 # Use the default chat service for API models
                 messages = [{"role": "system", "content": system_prompt}] + [
@@ -319,14 +308,7 @@ class ChatService:
                             assistant_response = final_response.choices[0].message.content
 
                 response = assistant_response
-<<<<<<< HEAD
-                audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER, model=speech_model)
-                print(audio_filename)
-                print(response)
-                print(9999999999)
-=======
                 audio_filename = generate_speech(response, language="en", AUDIO_FOLDER=AUDIO_FOLDER) # , model=speech_model
->>>>>>> c5df9cdd794f4843125ab3e09b449e62c59a5774
 
             conversations[conversation_id].append({
                 "role": "assistant",
@@ -463,14 +445,9 @@ def upload_audio():
         audio = AudioSegment.from_file(temp_path, format="webm")
         audio.export(wav_path, format="wav")
         os.remove(temp_path)
-<<<<<<< HEAD
-        transcribed_text = transcribe_speech(wav_path, model_name="openai/whisper-tiny")
-        print(transcribed_text)
-=======
         #data_t = request.json
         #transcribe_model = data_t.get('transcribe_model')
         transcribed_text = transcribe_speech(wav_path)# , model_name=transcribe_model
->>>>>>> c5df9cdd794f4843125ab3e09b449e62c59a5774
         
         if transcribed_text:
             # Add user message with audio
@@ -579,9 +556,9 @@ def pixtral_generate():
 def rag_generate_response():
     data = request.json
     question = data.get("question")
-    repo = data.get("repo", "huggingface/peft")
-    rag_model_id = data.get("repo", "huggingface/peft")
-    embedding_model_id = data.get("repo", "huggingface/peft")
+    repo = data.get("repo")
+    rag_model_id = data.get("repo", "HuggingFaceH4/zephyr-7b-beta")
+    embedding_model_id = data.get("repo", "BAAI/bge-base-en-v1.5")
 
     # Load GitHub issues
     try:
