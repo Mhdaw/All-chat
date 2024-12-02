@@ -15,6 +15,7 @@ import { Pause, Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { MAIN_URL } from '@/lib/utils';
 
+
 export function MessageActions({
   chatId,
   message,
@@ -34,9 +35,7 @@ export function MessageActions({
   if (message.role === 'user') return null;
   
   useEffect(()=>{
-    console.log(message);
-    
-    audio!.current!.src = `${MAIN_URL}/${ "audio/"+ message.audio_file|| `audio/${message.audio_url}`}`
+    audio!.current!.src = `${MAIN_URL}/audio/${message.audio_file || `${message.audio_url}`}`
     setAudioState("paused")
     audio!.current!.onpause =()=>{
       setAudioState("paused")
@@ -45,15 +44,12 @@ export function MessageActions({
   },[])
 
   const play =()=>{
-    console.log(message);
     console.log(audio!.current!.src)
     audio!.current!.play()
     setAudioState("playing")
   }
 
   const stop =()=>{
-    console.log("stopping");
-    
     audio?.current!.pause()
     setAudioState("paused")
   }
