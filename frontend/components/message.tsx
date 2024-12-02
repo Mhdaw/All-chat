@@ -110,7 +110,7 @@ export const PreviewImage = ({
     >
       <div
         className={cx(
-          'group-data-[role=user]/message:bg-primary group-data-[role=user]/message:text-primary-foreground flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
+          ' relative group-data-[role=user]/message:text-primary-foreground flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
         )}
       >
         {image.role === 'ai' && (
@@ -118,13 +118,22 @@ export const PreviewImage = ({
             <SparklesIcon size={14} />
           </div>
         )}
+        <div className=' flex flex-col gap-2'>
+        <div className="flex flex-col gap-2 group-data-[role=user]/message:bg-primary w-full p-2 rounded-xl min-h-4 z-20">
+          {image.message && (
+            <div className="flex flex-col gap-2 ">
+              <Markdown>{image.message as string}</Markdown>
+            </div>
+          )}
+          </div>
 
         <div className="flex flex-col gap-2 w-full">
           {image.path && (
             <div className="flex flex-col gap-4">
-              <Image src={image.path} alt='ai message' />
+              <Image src={image.path} width={300} height={320} alt='ai message' className=' rounded-md w-full h-full object-cover block' />
             </div>
           )}
+        </div>
         </div>
       </div>
     </motion.div>

@@ -117,7 +117,6 @@ export function MultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
-    // window.history.replaceState({}, '', `/chat/${chatId}`);
 
     handleSubmit();
 
@@ -188,7 +187,7 @@ export function MultimodalInput({
 
   return (
     <div className="relative w-full flex flex-col gap-4">
-      {messages.length === 0 &&
+      {/* {messages.length === 0 &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
           <div className="grid sm:grid-cols-2 gap-2 w-full">
@@ -221,7 +220,7 @@ export function MultimodalInput({
               </motion.div>
             ))}
           </div>
-        )}
+        )} */}
 
       <input
         type="file"

@@ -36,7 +36,7 @@ export function MessageActions({
   useEffect(()=>{
     console.log(message);
     
-    audio!.current!.src = `${MAIN_URL}/${message.audio_file|| `audio/${message.audio_url}`}`
+    audio!.current!.src = `${MAIN_URL}/${ "audio/"+ message.audio_file|| `audio/${message.audio_url}`}`
     setAudioState("paused")
     audio!.current!.onpause =()=>{
       setAudioState("paused")

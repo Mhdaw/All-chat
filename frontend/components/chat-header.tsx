@@ -22,20 +22,20 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const { open } = useSidebar();
   const localStorage = useReadLocalStorage("chats") as []
   const [newStorage, setLocalStorage] = useLocalStorage<any>("chats", localStorage)
-  const { botType,setBotType} = useContext(modelContext)
-  const newChat = useCallback(()=>{
+  const { botType, setBotType } = useContext(modelContext)
+  const newChat = useCallback(() => {
     fetch(`${MAIN_URL}/create_chat`, {
       method: 'POST',
       headers: {
-                    'Content-Type': 'application/json'
+        'Content-Type': 'application/json'
       }
     })
-    .then((res)=> res.json())
-      .then((data)=> {
+      .then((res) => res.json())
+      .then((data) => {
         setLocalStorage([...newStorage, data])
         router.push(`/${data.chat_id}`);
       })
-}, [])
+  }, [])
 
   const { width: windowWidth } = useWindowSize();
 
@@ -61,18 +61,18 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
         className="order-1 md:order-2"
       />
       <div className=' absolute right-[50%] py-4 translate-x-[50%]'>
-            <Button
-            onClick={()=>setBotType("CHAT")}
-            className={cn(' hover:bg-slate-100 rounded-none bg-black text-white border-r rounded-l-md', botType == "CHAT"&& "bg-slate-50 text-black hover:bg-slate-800")}
-             >
-              Chats
-            </Button>
-            <Button
-            onClick={()=>setBotType("IMAGE")}
-            className={cn('hover:bg-slate-100 rounded-none bg-black text-white border-l rounded-r-md',  botType == "IMAGE"&& "bg-slate-50 text-black hover:bg-slate-800")}
-             >
-              Image
-            </Button>
+        <Button
+          onClick={() => setBotType("CHAT")}
+          className={cn(' hover:bg-slate-100  rounded-none bg-indigo-200 text-white border-r rounded-l-md', botType == "CHAT" && "bg-indigo-400 text-white hover:bg-indigo-400")}
+        >
+          Chats
+        </Button>
+        <Button
+          onClick={() => setBotType("IMAGE")}
+          className={cn('hover:bg-slate-100  rounded-none bg-indigo-200 text-white border-l rounded-r-md', botType == "IMAGE" && "bg-indigo-400 text-white hover:bg-indigo-400")}
+        >
+          Image
+        </Button>
       </div>
 
       <Button
@@ -83,7 +83,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
           href=""
           target="_noblank"
         >
-            About us
+          About us
         </Link>
       </Button>
     </header>

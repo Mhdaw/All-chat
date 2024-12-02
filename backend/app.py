@@ -512,7 +512,7 @@ def clear_history(conversation_id):
         conversations[conversation_id] = []
         save_data(conversations, chat_metadata)
     return jsonify({'status': 'success'})
-
+llm = None
 @app.route("/pixtral/generate", methods=["POST"])
 def pixtral_generate():
     """API endpoint for generating a response."""
