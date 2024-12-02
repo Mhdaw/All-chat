@@ -19,4 +19,4 @@ vllm
 langchain
 langchain-community
 langchain_core
-Triton
+Triton 

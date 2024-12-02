@@ -25,6 +25,7 @@ from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
+from MarcoO1 import load_marcoO1_model, marcoO1_generate_response
 from pixtral import load_pixtral_model
 from llamavision import get_model_response
 from speech2text import transcribe_speech
@@ -595,6 +596,34 @@ def llamavision_generate():
     response = get_model_response(image_url, prompt)
     return jsonify({"response": response})
 
+@app.route("/marcoO1/generate", methods=["POST"])
+def marcoO1_generate():
+    """API endpoint for generating responses."""
+    global model, tokenizer
 
+    if model is None or tokenizer is None:
+        load_marcoO1_model()
+        if model is None or tokenizer is None:
+            return jsonify({"error": "Failed to load the model."}), 500
+
+    # Get the input data from the request
+    data = request.json
+    prompt = data.get("prompt")
+    max_new_tokens = data.get("max_new_tokens", 4096)
+
+    if not prompt:
+        return jsonify({"error": "'prompt' is required."}), 400
+
+    try:
+        # Tokenize the input prompt
+        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=4096).to('cuda')
+
+        # Generate response
+        response = marcoO1_generate_response(model, tokenizer, inputs.input_ids, inputs.attention_mask, max_new_tokens)
+        return jsonify({"response": response})
+    except Exception as e:
+        logging.error(f"Error generating response: {e}")
+        return jsonify({"error": "Failed to generate a response."}), 500
+        
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)

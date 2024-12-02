@@ -3,11 +3,12 @@ import torch
 from PIL import Image
 from transformers import MllamaForConditionalGeneration, AutoProcessor
 import logging
+import os
 
 # Globals for model and processor
 vision_model = None
 vision_processor = None
-
+hf_token = os.getenv("HF_token")
 def load_vision_model_and_tokenizer():
     """Loads the vision model and processor."""
     global vision_model, vision_processor
@@ -17,10 +18,11 @@ def load_vision_model_and_tokenizer():
 
         vision_model = MllamaForConditionalGeneration.from_pretrained(
             "meta-llama/Llama-3.2-11B-Vision-Instruct",
+            use_auth_token=hf_token,
             torch_dtype=torch.bfloat16,
             device_map="auto",
         )
-        vision_processor = AutoProcessor.from_pretrained("meta-llama/Llama-3.2-11B-Vision-Instruct")
+        vision_processor = AutoProcessor.from_pretrained("meta-llama/Llama-3.2-11B-Vision-Instruct",use_auth_token=hf_token)
         logging.info("Vision model and processor loaded successfully.")
     except Exception as e:
         logging.error(f"Error loading vision model and tokenizer: {e}")
