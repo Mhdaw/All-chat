@@ -9,6 +9,8 @@ import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
 import { Message, ImageMessage } from '@/lib/types';
 import Image from 'next/image';
+import Link from 'next/link';
+import { Download } from 'lucide-react';
 
 export const PreviewMessage = ({
   chatId,
@@ -131,6 +133,10 @@ export const PreviewImage = ({
           {image.path && (
             <div className="flex flex-col gap-4">
               <Image src={image.path} width={300} height={320} alt='ai message' className=' rounded-md w-full h-full object-cover block' />
+              <a href={image.path} download={true} target="_blank"
+        rel="noopener noreferrer" >
+                <Download  color='#000' />
+              </a>
             </div>
           )}
         </div>

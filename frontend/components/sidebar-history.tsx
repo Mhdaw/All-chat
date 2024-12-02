@@ -177,66 +177,14 @@ export function SidebarHistory() {
     );
   }
 
-  const groupChatsByDate = (chats: Chat[]): GroupedChats => {
-    if (typeof window === 'undefined') return {
-      today: chats,
-      yesterday: [],
-      lastWeek: [],
-      lastMonth: [],
-      older: [],
-    } as GroupedChats;
 
-    const now = new Date();
-    const oneWeekAgo = subWeeks(now, 1);
-    const oneMonthAgo = subMonths(now, 1);
-
-    return chats.reduce(
-      (groups, chat) => {
-        const chatDate = now
-
-        if (isToday(chatDate)) {
-          groups.today.push(chat);
-        } else if (isYesterday(chatDate)) {
-          groups.yesterday.push(chat);
-        } else if (chatDate > oneWeekAgo) {
-          groups.lastWeek.push(chat);
-        } else if (chatDate > oneMonthAgo) {
-          groups.lastMonth.push(chat);
-        } else {
-          groups.older.push(chat);
-        }
-
-        return groups;
-      },
-      {
-        today: [],
-        yesterday: [],
-        lastWeek: [],
-        lastMonth: [],
-        older: [],
-      } as GroupedChats,
-    );
-  };
-
+    
   return (
     <>
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            {history &&
-              (() => {
-                const groupedChats = groupChatsByDate(history);
-
-                return (
-                  <>
-                    {groupedChats.today.length > 0 && (
-                      <>
-                       
-                          <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
-                          Today
-                          </div>
-                     
-                        {groupedChats.today.map((chat) => (
+          { history &&  history.map((chat) => (
                           <ChatItem
                             key={chat.chat_id}
                             chat={chat}
@@ -249,91 +197,6 @@ export function SidebarHistory() {
                             setOpenMobile={setOpenMobile}
                           />
                         ))}
-                      </>
-                    )}
-
-                    {groupedChats.yesterday.length > 0 && (
-                      <>
-                        <div className="px-2 4 5 6 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Yesterday
-                        </div>
-                        {groupedChats.yesterday.map((chat) => (
-                          <ChatItem
-                            key={chat.chat_id}
-                            chat={chat}
-                            isActive={chat.chat_id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
-
-                    {groupedChats.lastWeek.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Last 7 days
-                        </div>
-                        {groupedChats.lastWeek.map((chat) => (
-                          <ChatItem
-                            key={chat.chat_id}
-                            chat={chat}
-                            isActive={chat.chat_id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
-
-                    {groupedChats.lastMonth.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Last 30 days
-                        </div>
-                        {groupedChats.lastMonth.map((chat) => (
-                          <ChatItem
-                            key={chat.chat_id}
-                            chat={chat}
-                            isActive={chat.chat_id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
-
-                    {groupedChats.older.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Older
-                        </div>
-                        {groupedChats.older.map((chat) => (
-                          <ChatItem
-                            key={chat.chat_id}
-                            chat={chat}
-                            isActive={chat.chat_id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
-                  </>
-                );
-              })()}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -357,3 +220,4 @@ export function SidebarHistory() {
     </>
   );
 }
+

@@ -22,6 +22,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const { open } = useSidebar();
   const localStorage = useReadLocalStorage("chats") as []
   const [newStorage, setLocalStorage] = useLocalStorage<any>("chats", localStorage)
+  const [aiState, setAiState] = useLocalStorage<any>("state", "CHAT")
   const { botType, setBotType } = useContext(modelContext)
   const newChat = useCallback(() => {
     fetch(`${MAIN_URL}/create_chat`, {
@@ -62,13 +63,19 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
       />
       <div className=' absolute right-[50%] py-4 translate-x-[50%]'>
         <Button
-          onClick={() => setBotType("CHAT")}
+          onClick={() => {
+            setBotType("CHAT")
+            setAiState("CHAT")
+          }}
           className={cn(' hover:bg-slate-100  rounded-none bg-indigo-200 text-white border-r rounded-l-md', botType == "CHAT" && "bg-indigo-400 text-white hover:bg-indigo-400")}
         >
           Chats
         </Button>
         <Button
-          onClick={() => setBotType("IMAGE")}
+          onClick={() => {
+            setBotType("IMAGE")
+            setAiState("IMAGE")
+          }}
           className={cn('hover:bg-slate-100  rounded-none bg-indigo-200 text-white border-l rounded-r-md', botType == "IMAGE" && "bg-indigo-400 text-white hover:bg-indigo-400")}
         >
           Image

@@ -10,7 +10,7 @@ import type { Vote } from '@/lib/db/schema';
 import { cn, fetcher, generateUUID, uploadFile } from '@/lib/utils';
 import { Message, ImageMessage } from '@/lib/types';
 import { MultimodalInput } from './multimodal-input';
-import { Overview, ImageOverview } from './overview';
+import { Overview, ImageOverview, PixtralOverview, RagOverview } from './overview';
 import { useParams } from 'next/navigation';
 import { MAIN_URL } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ import { models } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@radix-ui/react-tooltip';
 import { BetterTooltip } from './ui/tooltip';
+import { useReadLocalStorage } from 'usehooks-ts';
 
 
 export const modelContext = createContext<any>(null)
@@ -38,7 +39,8 @@ export function Chat({
   const [input, setInput] = useState<string>("")
   const [isLoading, setLoading] = useState<boolean>(false)
   const [model, setModel] = useState(models[0])
-  const [botType, setBotType] = useState<"CHAT" | "IMAGE">("CHAT")
+  const localStorageAiState:any = useReadLocalStorage("state") as string
+  const [botType, setBotType] = useState<"CHAT" | "IMAGE"|any>("CHAT")
   const [imagePath, setImageMessage] = useState<ImageMessage[]>([])
   const [imageModel, setImageModel] = useState<"RAG" | "LLAMAVISION"|"PIXTRAL">("LLAMAVISION")
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
@@ -156,6 +158,7 @@ export function Chat({
 
     if (attachments.length < 1) {
       toast.error("no attachments")
+      setLoading(false)
       return
     }
     const userMessage: ImageMessage = {
@@ -264,6 +267,7 @@ export function Chat({
 
   useEffect(() => {
     setIsMounted(true);
+    setBotType(localStorageAiState)
     fetch(`${MAIN_URL}/get_history/${chatId}`)
       .then(response => response.json())
       .then((data) => {
@@ -313,7 +317,7 @@ export function Chat({
               </div>
             ) : (
               <div ref={imgContainerRef} className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4" >
-                {imagePath.length === 0 && <ImageOverview />}
+                {imagePath.length === 0 && imageModel == "LLAMAVISION" ? <ImageOverview />: imagePath.length === 0 &&  imageModel =="PIXTRAL"?  <PixtralOverview /> : imagePath.length === 0 &&  <RagOverview /> }
 
                 {imagePath.map((message, i) => (
                   <PreviewImage
@@ -362,7 +366,7 @@ export function Chat({
               handleSubmit();
             }}
           >
-            {
+            { botType === "IMAGE" &&
               imageModel === "RAG"? <p className=''>Submit Github repository to analyze (eg https://github.com/username/repo.git)</p>:""
             }
             <MultimodalInput
