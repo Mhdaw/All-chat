@@ -87,7 +87,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
         asChild
       >
         <Link
-          href=""
+          href="/features"
           target="_noblank"
         >
           About us

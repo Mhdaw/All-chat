@@ -26,65 +26,66 @@ import {
 
 const features = [
   {
-    title: 'Interactive Lessons',
-    description: 'Engaging, multimedia-rich lessons designed by language experts for effective learning.',
-    icon: BookOpen,
-    color: 'text-blue-500',
+    "title": "AI-Powered Chat Service for Instant Assistance",
+    "description": "Use the **AkashChat API** to provide real-time, interactive AI-powered chat services. The AI bot can handle customer support, offer instant information, and engage users in personalized conversations based on their inputs and preferences.",
+    "icon": "ChatBubbleLeftRight",
+    "color": "text-blue-500"
   },
   {
-    title: 'AI-Powered Practice',
-    description: 'Practice conversations with our advanced AI tutors that adapt to your learning pace.',
-    icon: Bot,
-    color: 'text-purple-500',
+    "title": "Real-Time Audio Transcription and Translation",
+    "description": "Leverage **Rag AI**'s advanced speech recognition and natural language processing capabilities to provide real-time transcription and translation of audio content. Users can upload or stream audio, and the system will transcribe it into text while offering real-time language translation for multilingual support.",
+    "icon": "Microphone",
+    "color": "text-purple-500"
   },
   {
-    title: 'Speech Recognition',
-    description: 'Perfect your pronunciation with real-time feedback on your speaking.',
-    icon: Mic,
-    color: 'text-red-500',
+    "title": "AI-Generated Images from Text Descriptions",
+    "description": "Utilize **LLamaVision**'s image generation and decoding capabilities to create unique images from user-generated text prompts. Users can input detailed descriptions, and the AI will generate corresponding visual representations, helping designers, marketers, and creatives quickly prototype visuals.",
+    "icon": "Image",
+    "color": "text-red-500"
   },
   {
-    title: 'Native Speaker Sessions',
-    description: 'Connect with native speakers for authentic conversation practice.',
-    icon: MessageCircle,
-    color: 'text-green-500',
+    "title": "Decoding and Analyzing Images with AI",
+    "description": "Leverage **LLamaVision** for advanced image recognition and decoding. This can include extracting text from images (OCR), identifying objects, and analyzing visual content to offer detailed insights. It can be used for applications like security, accessibility, and data extraction from images.",
+    "icon": "Photo",
+    "color": "text-green-500"
   },
   {
-    title: 'Progress Tracking',
-    description: 'Visualize your learning journey with detailed progress analytics.',
-    icon: LineChart,
-    color: 'text-yellow-500',
+    "title": "AI-Driven Voice Interaction for Enhanced User Experience",
+    "description": "Integrate **Rag AI**'s AI voice capabilities to provide natural language speech synthesis and recognition. Users can interact with the app using voice commands, which are processed by the AI to give intelligent responses and actions, making it suitable for hands-free operations or accessibility.",
+    "icon": "Speakerphone",
+    "color": "text-yellow-500"
   },
   {
-    title: 'Personalized Learning',
-    description: 'Custom learning paths adapted to your goals and proficiency level.',
-    icon: Target,
-    color: 'text-indigo-500',
+    "title": "Git Repository Analysis and Code Insights",
+    "description": "Use the **AkashChat API** to analyze Git repositories and provide insights into code structure, commit history, and dependencies. Developers can ask the AI for code reviews, get suggestions on best practices, and receive detailed reports on repository health and quality.",
+    "icon": "Code",
+    "color": "text-indigo-500"
   },
   {
-    title: 'Cultural Insights',
-    description: 'Learn about the cultures behind the languages youre studying.',
-    icon: Globe2,
-    color: 'text-pink-500',
+    "title": "Audio-Based Code Analysis for Debugging and Suggestions",
+    "description": "Integrate **Rag AI** with your app to transcribe and analyze audio-based queries related to Git repositories or code-related issues. Developers can speak their coding problems, and the AI will transcribe and offer debugging suggestions, along with analyzing the repository for potential fixes.",
+    "icon": "Microphone",
+    "color": "text-pink-500"
   },
   {
-    title: 'Vocabulary Builder',
-    description: 'Expand your vocabulary with smart flashcards and spaced repetition.',
-    icon: Brain,
-    color: 'text-cyan-500',
+    "title": "Voice-Activated Git Repository Search and Commands",
+    "description": "Utilize **AkashChat API** with integrated AI voice capabilities to enable voice-activated search and commands in Git repositories. Developers can say commands like 'Show me the latest commits' or 'Find bugs in the repository', and the AI will process them and provide relevant information.",
+    "icon": "Voice",
+    "color": "text-cyan-500"
   },
   {
-    title: 'Audio Lessons',
-    description: 'Learn on the go with downloadable audio lessons and podcasts.',
-    icon: Headphones,
-    color: 'text-orange-500',
-  },
+    "title": "Instant Image Analysis and Feedback via Voice",
+    "description": "With **LLamaVision**, enable users to upload images and receive instant voice-based feedback. Whether it’s object recognition, decoding text, or analyzing visual content, users can ask questions about images and get immediate voice responses, offering a more interactive experience.",
+    "icon": "Photo",
+    "color": "text-orange-500"
+  }
 ];
 
+
 const stats = [
-  { number: '30+', label: 'Languages', icon: Languages },
+  { number: '30+', label: 'Chats', icon: Languages },
   { number: '1M+', label: 'Active Users', icon: Users },
-  { number: '50M+', label: 'Lessons Completed', icon: BookOpen },
+  { number: '50M+', label: 'Audios Reformed', icon: BookOpen },
   { number: '95%', label: 'Success Rate', icon: Target },
 ];
 
@@ -129,7 +130,7 @@ export default function FeaturesPage() {
             >
               <CardHeader>
                 <div className={`${feature.color} mb-4`}>
-                  <feature.icon className="w-8 h-8" />
+                  <feature.icon  />
                 </div>
                 <CardTitle>{feature.title}</CardTitle>
                 <CardDescription>{feature.description}</CardDescription>
