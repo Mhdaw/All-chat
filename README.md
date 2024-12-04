@@ -115,8 +115,8 @@ npm start
 ### Usage Instructions
 Access the platform at http://localhost:3000.
 Explore various features, including:
-Conversational AI for text and voice inputs.
-Image generation with Stable Diffusion and Pixtral.
+Conversational AI for text, voice and image inputs.
+Image generation with Stable Diffusion and Flux.
 Real-time web search and data analysis.
 Financial data insights using YFinance.
 
