@@ -62,7 +62,10 @@ Built for scalability, All-Chat is open-source, allowing developers to customize
 - **YFinance:** Integration for real-time financial data.
 - **Flask:** Lightweight and efficient web framework for API deployment.
 ### Frontend
-....
+- **Nextjs** For Frontend development
+- **Radix-ui** For UI and styling
+- **Framer Motion** For animations
+- **Firebase** For file storage
 
 
 ## Installation
