@@ -196,3 +196,16 @@ As the first decentralized AI platform, All-Chat creates a synergistic link betw
 All-Chat is not just an application—it’s a movement toward a future where AI is decentralized, accessible, scalable, and sustainable.
 
 Help us in shaping the future of conversational AI with All-Chat!
+
+
+### deploying on Akash network:
+1. Firstly prepare your APIs(look inside the backend/frontend.sdl) and register to [akash network](https://akash.network/)
+2. download the .sdl files for both backend and frontend
+3. configure the APIs to the sdl files
+4. go to akash network and hit deploy
+5. select the deploy from sdl
+6. upload the backend.sdl
+7. create a deployment
+8. the copy the generated link to the deployment and paste it as the Main url of the frontend.sdl
+9. do the same process for the frontend.sdl
+10. Thats it,the generated link is the deployment link, use the All-chat and enjoy :)
