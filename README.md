@@ -33,7 +33,7 @@ With its unique ability to handle text, images, and contextual data retrieval, A
 
 ### 2. Image Generation and Vision Capabilities
 - **Stable Diffusion and Flux Models:** Create stunning, high-quality visuals using advanced text-to-image models. These models allow for highly creative and detailed outputs based on user prompts.
-- **Pixtral:** Engage in visual conversations with Pixtral, a chat system that combines conversational AI with image generation. This feature is particularly suited for artists, designers, and educators.
+- **Pixtral:** Engage in visual conversations with Pixtral, a chat system that combines conversational AI with image understanding. This feature is particularly suited for artists, designers, and educators.
 - **Llama 3.2 Vision Models:** Incorporate advanced vision models for understanding and responding to image-based queries, enabling deeper interactions with visual data.
 
 ### 3. Web Search & Retrieval-Augmented Generation (RAG)
