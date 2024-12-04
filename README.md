@@ -79,6 +79,11 @@ git clone https://github.com/Mhdaw/All-chat.git
 cd all-chat  
 ```
 **Backend Setup**
+
+0. **Open The Backend Folder:**
+```
+cd backend
+```
 1. **Create a Virtual Environment:**
 ```
 python -m venv venv  
